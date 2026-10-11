@@ -21,7 +21,7 @@ export default async function Profile() {
     <>
       <PageTitle
         title="My Profile"
-        sub="Your permanent filters. They are stored in the database, remembered on every device and session, and decide what appears on New Releases, the dashboard and in your Telegram digest, until you change them."
+        sub="Saved to your database and used on every page"
       />
       <section className="mb-6 rounded-xl border border-line bg-surface p-4 text-sm">
         <h2 className="mb-2 text-lg font-bold">Account</h2>

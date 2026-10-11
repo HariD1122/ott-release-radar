@@ -74,7 +74,7 @@ try {
   const ms = await digest();
   ok("multi-select (ANY within a filter)", ms.filters.entries.every((e) => e.genres.some((g) => ["Drama", "Thriller"].includes(g)) && e.languages.some((l) => ["Hindi", "English"].includes(l))), `${ms.filters.entries.length} entries`);
   const newPage = (await (await fetch(base + "/new?w=completed", { headers: { cookie } })).text()).replace(/<!-- -->/g, "");
-  ok("New Releases page reflects the saved filters", newPage.includes(`${ms.matchCount} release(s) match your filters`), `expects ${ms.matchCount}`);
+  ok("New Releases page reflects the saved filters", new RegExp(`>${ms.matchCount}</span><span[^>]*>match your filters`).test(newPage), `expects ${ms.matchCount}`);
   ok("personalized entries are a subset of the filter-matching set", ms.personalized.entries.every((e) => ms.filters.entries.some((f) => f.releaseId === e.releaseId)));
   ok("matched never exceeds eligible", ms.eligibleCount >= ms.matchCount);
 } finally {
@@ -90,7 +90,7 @@ console.log("INFO digest:", `eligible ${d.eligibleCount}, matching ${d.matchCoun
 
 // ---- pages, titles, robustness ----
 const pages = [
-  ["/", "collected records"], ["/new", "match your filters"], ["/new?w=completed", "match your filters"], ["/movies", "Collected movies"],
+  ["/", "titles collected"], ["/new", "match your filters"], ["/new?w=completed", "match your filters"], ["/movies", "Verified India digital releases"],
   ["/series", "New series and new seasons"], ["/episodes", "Episode Updates"], ["/watchlist", "My Watchlist"], ["/digest", "Personalized for You"],
   ["/profile", "My Profile"], ["/settings", "Settings & Telegram"],
 ];

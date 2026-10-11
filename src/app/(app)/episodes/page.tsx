@@ -1,6 +1,6 @@
 import Filters from "@/components/Filters";
 import TitleCard from "@/components/TitleCard";
-import { Grid, Notice, PageTitle, Row } from "@/components/ui";
+import { Grid, PageTitle, Row } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
 import { distinctValues, getPrefs, listReleases } from "@/lib/catalogue";
 import { q } from "@/lib/db";
@@ -18,12 +18,11 @@ export default async function Episodes({ searchParams }: { searchParams: Promise
   ]);
   return (
     <>
-      <PageTitle title="Episode Updates" sub="Season premieres and episodes with an air date from TMDB. Follow a series from its title page to see its updates here." />
-      <Notice>Episode dates are TMDB air dates (calendar dates, not region-specific). Not every show is covered, and a show is not assumed to release weekly.</Notice>
-      <Row title="Series you follow" count={following.length} hint={following.map((f) => f.series_title).join(", ") || undefined} empty="You are not following any series yet. Open a series and press Follow.">
+      <PageTitle title="Episode Updates" sub="Season premieres and new episodes" />
+      <Row title="Series you follow" count={following.length} hint={following.map((f) => f.series_title).slice(0, 4).join(", ") || undefined} empty="You are not following any series yet. Open a series and press Follow.">
         {followedRows.map((r) => <TitleCard key={r.id} release={r} detail={r.content_type === "episode" ? `S${r.season_number}E${r.episode_number}` : `Season ${r.season_number}`} />)}
       </Row>
-      <h2 className="mb-2 text-lg font-bold">Episode and season updates matching your filters</h2>
+      <h2 className="mb-3 text-xl font-bold tracking-tight">All updates</h2>
       <Filters action="/episodes" current={currentParams(sp)} options={options} saved={prefs} showDates />
       <Grid releases={items} empty="No episode updates match your saved filters." />
     </>

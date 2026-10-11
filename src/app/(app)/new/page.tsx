@@ -1,11 +1,10 @@
 import Filters from "@/components/Filters";
-import { Grid, Notice, PageTitle } from "@/components/ui";
+import { Grid, PageTitle, Segmented, StatPills } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
 import { distinctValues, eligibleReleases, getPrefs, listReleases } from "@/lib/catalogue";
 import { currentParams, first, savedFilters, type SP } from "@/lib/page-helpers";
 import { matchFilters, rankForFilters } from "@/lib/ranking";
 import { isUpcoming, toIstDate, weeklyWindow } from "@/lib/time/window";
-import Link from "next/link";
 
 export default async function NewReleases({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
@@ -35,18 +34,29 @@ export default async function NewReleases({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageTitle title="New Releases" sub={`Verified releases in the weekly window ${w.startDate} (after 6:00 PM IST) → ${w.endDate} (6:00 PM IST), recommended from your saved filters.`} />
-      <div className="mb-4 flex gap-2 text-sm">
-        <Link className={`btn ${kind === "current" ? "btn-primary" : ""}`} href="/new?w=current">This week so far</Link>
-        <Link className={`btn ${kind === "completed" ? "btn-primary" : ""}`} href="/new?w=completed">Last completed week (digest window)</Link>
-      </div>
+      <PageTitle
+        title="New Releases"
+        sub={`${w.startDate} → ${w.endDate}, 6 PM IST`}
+        right={
+          <Segmented
+            active={kind}
+            options={[
+              { key: "current", label: "This week so far", href: "/new?w=current" },
+              { key: "completed", label: "Last completed week", href: "/new?w=completed" },
+            ]}
+          />
+        }
+      />
       <Filters action="/new" current={currentParams(sp)} options={options} saved={prefs} showType showDates />
-      <p className="mb-3 text-sm text-muted">
-        {matching.length} release(s) match your filters. {hidden} other verified release(s) in this window are hidden by your filters.
-      </p>
+      <StatPills
+        items={[
+          { label: "match your filters", value: matching.length, tone: "green" },
+          { label: "hidden by filters", value: hidden, tone: "slate" },
+          { label: "upcoming", value: upcoming.length, tone: "amber" },
+        ]}
+      />
       <Grid releases={matching} empty="No verified releases match your saved filters in this window." />
-      <h2 className="mb-2 mt-10 text-lg font-bold">Upcoming — not released yet</h2>
-      <Notice>These dates are in the future and match your filters. They are not counted as confirmed releases.</Notice>
+      <h2 className="mb-3 mt-10 flex items-center gap-2 text-xl font-bold tracking-tight">Upcoming <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">Not released yet</span></h2>
       <Grid releases={upcoming} empty="No upcoming releases match your filters." />
     </>
   );

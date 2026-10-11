@@ -2,7 +2,7 @@ import ApiButton from "@/components/ApiButton";
 import Filters from "@/components/Filters";
 import HeroCarousel, { type Slide } from "@/components/HeroCarousel";
 import TitleCard from "@/components/TitleCard";
-import { Notice, PageTitle, Row } from "@/components/ui";
+import { Notice, PageTitle, Row, StatPills } from "@/components/ui";
 import { counts, distinctValues, eligibleReleases, featuredReleases, listReleases } from "@/lib/catalogue";
 import { requireUser } from "@/lib/auth/auth";
 import { buildDigest } from "@/lib/digest";
@@ -75,7 +75,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <HeroCarousel slides={slides} />
       <PageTitle
         title="Home"
-        sub={`${c.total} collected records: ${c.movies} movies, ${c.series} new series, ${c.seasons} new seasons, ${c.episodes} episodes.`}
+        sub="Your weekly OTT radar for India"
         right={
           <div className="flex flex-wrap items-start gap-3">
             <ApiButton url="/api/digest/send" primary confirm="Send this week's digest to Telegram now?">Send This Week&apos;s List Now</ApiButton>
@@ -83,17 +83,26 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
         }
       />
+      <StatPills
+        items={[
+          { label: "titles collected", value: c.total, tone: "blue" },
+          { label: "movies", value: c.movies, tone: "violet" },
+          { label: "new series", value: c.series, tone: "green" },
+          { label: "new seasons", value: c.seasons, tone: "amber" },
+          { label: "episodes", value: c.episodes, tone: "slate" },
+        ]}
+      />
       <Filters action="/" current={{}} options={options} saved={prefs} showType showText={false} />
       {c.total === 0 && <Notice tone="warn">No data has been collected yet. Press Refresh Data to fetch releases.</Notice>}
 
-      <Row title="New This Week" count={thisWeek.length} hint={`Released so far in the current weekly window (closes ${win.endDate} 6:00 PM IST) and matching your saved filters.`} empty="No verified releases yet in the current weekly window.">
+      <Row title="New This Week" count={thisWeek.length} hint={`Week closes ${win.endDate}, 6 PM IST`} empty="No verified releases yet in the current weekly window.">
         {thisWeek.slice(0, 24).map((r) => <TitleCard key={r.id} release={r} rec={rec(r)} />)}
       </Row>
 
       <Row
         title="Personalized for You"
         count={digest.personalized.entries.length}
-        hint={`Last completed window (${digest.window.startDate} → ${digest.window.endDate}). ${digest.personalized.feedbackActive ? `Uses your preferences and ${digest.personalized.feedbackCount} reactions.` : "Preference-based for now; Like/Dislike titles to improve it."}`}
+        hint={`${digest.window.startDate} → ${digest.window.endDate}`}
         empty="No personalized matches are available for this weekly window."
       >
         {digest.personalized.entries.slice(0, 20).map((e) => digest.cards[e.releaseId] && <TitleCard key={e.key} release={digest.cards[e.releaseId]} detail={e.detail} reasons={e.reasons} rec={rec(digest.cards[e.releaseId])} />)}
@@ -102,7 +111,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <Row
         title="Recommended for Your Filters"
         count={digest.filters.entries.length}
-        hint="Your saved genres, languages, platforms and types only. Newest first, independent of Like/Dislike."
+        hint="Newest first"
         empty="No titles match the selected filters for this window."
       >
         {digest.filters.entries.slice(0, 20).map((e) => digest.cards[e.releaseId] && <TitleCard key={e.key} release={digest.cards[e.releaseId]} detail={e.detail} rec={rec(digest.cards[e.releaseId])} />)}

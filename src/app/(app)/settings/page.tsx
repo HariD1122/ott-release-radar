@@ -18,7 +18,7 @@ export default async function Settings() {
   const configured = (k: string) => (process.env[k] ? "configured" : "missing");
   return (
     <>
-      <PageTitle title="Settings & Telegram" sub="Secrets live in server environment variables and are never shown here." />
+      <PageTitle title="Settings & Telegram" sub="Connections and data refresh" />
       <section className="mb-8 rounded-xl border border-line bg-surface p-4">
         <h2 className="mb-3 text-lg font-bold">Telegram</h2>
         <ul className="mb-4 space-y-1 text-sm">

@@ -7,7 +7,7 @@ export default async function Watchlist() {
   const items = await listReleases(user.id, { watchlistOnly: true, limit: 200 });
   return (
     <>
-      <PageTitle title="My Watchlist" sub="Titles you saved manually. Changing preferences never removes anything here." />
+      <PageTitle title="My Watchlist" sub="Titles you saved" />
       <Grid releases={items} empty="Nothing saved yet. Use the bookmark button on any title card." />
     </>
   );
