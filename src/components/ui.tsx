@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { ReleaseView } from "@/lib/catalogue";
+import ScrollRow from "./ScrollRow";
 import TitleCard from "./TitleCard";
 
 export function Row({ title, count, hint, children, empty }: { title: string; count?: number; hint?: string; children?: ReactNode; empty?: string }) {
@@ -12,7 +13,7 @@ export function Row({ title, count, hint, children, empty }: { title: string; co
       </div>
       {hint && <p className="mb-3 text-sm text-muted">{hint}</p>}
       {has ? (
-        <div className="row-scroll -mx-1 flex items-stretch gap-4 overflow-x-auto px-1 pb-4 pt-1">{children}</div>
+        <ScrollRow>{children}</ScrollRow>
       ) : (
         <p className="mt-2 rounded-lg border border-dashed border-line p-4 text-sm text-muted">{empty ?? "Nothing to show yet."}</p>
       )}

@@ -32,8 +32,8 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
         // eslint-disable-next-line @next/next/no-img-element
         <img src={r.backdrop_url} alt="" className="mb-6 h-48 w-full rounded-xl border border-line object-cover object-top shadow-sm md:h-72" />
       )}
-      <div className="grid gap-6 md:grid-cols-[210px_1fr]">
-        <TitleCard release={r} rec={r.rec_decision && r.rec_explanation ? { decision: r.rec_decision, reason: r.rec_explanation } : null} />
+      <div className="grid items-start gap-8 md:grid-cols-[280px_minmax(0,1fr)]">
+        <TitleCard release={r} wide rec={r.rec_decision && r.rec_explanation ? { decision: r.rec_decision, reason: r.rec_explanation } : null} />
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">{r.title}</h1>
           {r.episode_title && <p className="mt-1 text-accent">S{r.season_number}E{r.episode_number} — {r.episode_title}</p>}

@@ -43,6 +43,7 @@ describe.skipIf(!hasDb)("database integration", () => {
   afterAll(async () => {
     await q("DELETE FROM digest_history WHERE window_end < '2021-01-01'");
     await q("DELETE FROM releases WHERE provider_key = $1", [`itest:${loginId}`]);
+    await q("DELETE FROM releases WHERE provider_key LIKE $1", [`itest-feat:${loginId}:%`]);
     await q("DELETE FROM login_attempts WHERE login_id = $1", [loginId]);
     await q("DELETE FROM users WHERE id = $1", [userId]);
   });
@@ -115,6 +116,38 @@ describe.skipIf(!hasDb)("database integration", () => {
     const again = await cat.getPrefs(userId);
     expect(again).toEqual({ genres: ["Drama", "Thriller"], languages: ["Hindi", "Tamil"], platforms: ["Netflix"], contentTypes: ["movie", "series"] });
     await cat.savePrefs(userId, { genres: ["Thriller"], languages: ["Hindi"], platforms: ["Netflix"], contentTypes: ["movie"] });
+  });
+
+  it("hero carousel: top-rated new movies/series, never episodes, always 5 to 10", async () => {
+    const key = (n: string) => `itest-feat:${loginId}:${n}`;
+    const ins = (n: string, title: string, type: string, date: string, rating: number | null) =>
+      q(
+        `INSERT INTO releases (provider_key, tmdb_id, title, content_type, season_number, episode_number, backdrop_url, release_date,
+           release_date_type, verification_status, vote_average, vote_count) VALUES ($1, 9, $2, $3, $4, $5, 'https://x/y.jpg', $6, 'ott_digital_in', 'date_only', $7, 100)`,
+        [key(n), title, type, type === "episode" ? 1 : null, type === "episode" ? 1 : null, date, rating],
+      );
+    // 12 recent movies rated 5.0 .. 9.5, a 9.9-rated episode (must be excluded), a duplicate title
+    for (let i = 0; i < 12; i++) await ins(`m${i}`, `ITF Movie ${i}`, "movie", "2020-06-25", 5 + i * 0.4);
+    await ins("ep", "ITF Episode", "episode", "2020-06-25", 9.9);
+    await ins("dup", "ITF Movie 11", "season", "2020-06-26", 9.4);
+    const top = await cat.featuredReleases(userId, "2020-06-30");
+    expect(top.length).toBeGreaterThanOrEqual(5);
+    expect(top.length).toBeLessThanOrEqual(10);
+    expect(top.map((r) => r.title)).not.toContain("ITF Episode");
+    const ratings = top.map((r) => Number(r.vote_average));
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+    expect(new Set(top.map((r) => r.title)).size).toBe(top.length);
+    expect(top[0].title).toBe("ITF Movie 11");
+
+    // A single 10/10 vote must not beat a well-voted title.
+    await ins("lucky", "ITF One Vote", "movie", "2020-06-25", 10);
+    await q("UPDATE releases SET vote_count = 1 WHERE provider_key = $1", [key("lucky")]);
+    expect((await cat.featuredReleases(userId, "2020-06-30"))[0].title).toBe("ITF Movie 11");
+
+    // Only 3 titles in the 14-day window: the carousel is topped up to at least 5 from older releases.
+    const sparse = await cat.featuredReleases(userId, "2020-07-20");
+    expect(sparse.length).toBeGreaterThanOrEqual(5);
+    expect(sparse.length).toBeLessThanOrEqual(10);
   });
 
   it("automatic delivery is idempotent; manual is independent; failures are recorded; no collection runs", async () => {

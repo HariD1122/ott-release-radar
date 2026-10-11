@@ -27,6 +27,7 @@ export interface ReleaseView {
   runtime_minutes: number | null;
   episode_count: number | null;
   vote_average: string | null;
+  vote_count: number | null;
   source_url: string | null;
   last_fetched_at: string;
   feedback: "like" | "dislike" | null;
@@ -39,7 +40,7 @@ const SELECT = `
   r.id, r.title, r.content_type, r.series_tmdb_id, r.season_number, r.episode_number, r.episode_title,
   r.synopsis, r.poster_url, r.backdrop_url, r.genres, r.languages, r.platforms, r.platform_status,
   r.release_date::text AS release_date, r.release_at, r.release_precision, r.release_date_type,
-  r.verification_status, r.release_note, r.runtime_minutes, r.episode_count, r.vote_average::text AS vote_average,
+  r.verification_status, r.release_note, r.runtime_minutes, r.episode_count, r.vote_average::text AS vote_average, r.vote_count,
   r.source_url, r.last_fetched_at,
   f.value AS feedback, (w.release_id IS NOT NULL) AS in_watchlist,
   rec.decision AS rec_decision, rec.explanation AS rec_explanation
@@ -105,6 +106,38 @@ export async function eligibleReleases(userId: string, w: WeeklyWindow, asOf?: D
     [userId, w.startDate, w.endDate],
   );
   return rows.filter((r) => isEligible(r, w, asOf));
+}
+
+export const FEATURED_MIN = 5;
+export const FEATURED_MAX = 10;
+
+/**
+ * Hero carousel: the top-rated NEWLY released movies and series (new series / new seasons; not single episodes),
+ * released in the last 14 days, highest TMDB rating first, always with artwork. Between 5 and 10 titles:
+ * if fewer than 5 qualify in the window, the window is dropped and the best-rated released titles fill the gap.
+ */
+export async function featuredReleases(userId: string, today: string): Promise<ReleaseView[]> {
+  const base = `WHERE r.content_type IN ('movie','series','season') AND r.backdrop_url IS NOT NULL
+     AND r.release_date <= $2::date`;
+  // Vote-weighted rating (Bayesian average, prior 6.5 worth 10 votes) so a title with one 10/10 vote cannot top the list.
+  const order = `ORDER BY (COALESCE(r.vote_count, 0) >= 3 AND r.vote_average > 0) DESC,
+     ((COALESCE(r.vote_count, 0)::numeric / (COALESCE(r.vote_count, 0) + 10)) * COALESCE(r.vote_average, 0)
+       + (10::numeric / (COALESCE(r.vote_count, 0) + 10)) * 6.5) DESC, r.release_date DESC, r.id LIMIT 60`;
+  const pick = (rows: ReleaseView[]) => {
+    const seen = new Set<string>();
+    const out: ReleaseView[] = [];
+    for (const r of rows) {
+      const key = r.title.toLowerCase();
+      if (seen.has(key)) continue; // one slide per title
+      seen.add(key);
+      out.push(r);
+      if (out.length >= FEATURED_MAX) break;
+    }
+    return out;
+  };
+  let out = pick(await q<ReleaseView>(`SELECT ${SELECT} ${base} AND r.release_date >= $2::date - 14 ${order}`, [userId, today]));
+  if (out.length < FEATURED_MIN) out = pick(await q<ReleaseView>(`SELECT ${SELECT} ${base} ${order}`, [userId, today]));
+  return out;
 }
 
 export async function distinctValues(): Promise<{ genres: string[]; languages: string[]; platforms: string[] }> {

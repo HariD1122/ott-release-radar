@@ -102,6 +102,12 @@ for (const [p, marker] of pages) {
 }
 r = await fetch(base + "/preferences", { headers: { cookie }, redirect: "manual" });
 ok("old /preferences link redirects to /profile", [301, 302, 307, 308].includes(r.status) && (r.headers.get("location") ?? "").endsWith("/profile"), String(r.status));
+{
+  const home = await (await fetch(base + "/", { headers: { cookie } })).text();
+  const slideCount = (home.match(/aria-roledescription="slide"/g) || []).length;
+  ok("hero carousel has 5 to 10 slides", slideCount >= 5 && slideCount <= 10, `${slideCount} slides`);
+  ok("cards are fixed-size and carry no synopsis block", /h-\[376px\]/.test(home) && !/Synopsis not available/.test(home));
+}
 const ids = [...d.filters.entries, ...d.personalized.entries].slice(0, 3).map((e) => e.releaseId);
 for (const id of ids) {
   r = await fetch(`${base}/title/${id}`, { headers: { cookie } });

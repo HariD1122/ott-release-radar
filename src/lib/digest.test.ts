@@ -16,7 +16,7 @@ const rel = (id: string, over: Partial<ReleaseView> = {}): ReleaseView => ({
   genres: ["Thriller"], languages: ["Hindi"], platforms: ["Netflix"], platform_status: "tmdb_only",
   release_date: "2026-10-12", release_at: null, release_precision: "date", release_date_type: "ott_digital_in",
   verification_status: "date_only", release_note: null, runtime_minutes: null, episode_count: null,
-  vote_average: null, source_url: null, last_fetched_at: now.toISOString(), feedback: null, in_watchlist: false,
+  vote_average: null, vote_count: null, source_url: null, last_fetched_at: now.toISOString(), feedback: null, in_watchlist: false,
   rec_decision: null, rec_explanation: null, ...over,
 });
 

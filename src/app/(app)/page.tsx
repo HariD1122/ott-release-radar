@@ -1,14 +1,17 @@
 import ApiButton from "@/components/ApiButton";
 import Filters from "@/components/Filters";
+import HeroCarousel, { type Slide } from "@/components/HeroCarousel";
 import TitleCard from "@/components/TitleCard";
 import { Notice, PageTitle, Row } from "@/components/ui";
-import { counts, distinctValues, eligibleReleases, listReleases } from "@/lib/catalogue";
+import { counts, distinctValues, eligibleReleases, featuredReleases, listReleases } from "@/lib/catalogue";
 import { requireUser } from "@/lib/auth/auth";
 import { buildDigest } from "@/lib/digest";
 import { getPrefs } from "@/lib/catalogue";
 import { first, savedFilters, type SP } from "@/lib/page-helpers";
 import { matchFilters } from "@/lib/ranking";
 import { toIstDate, weeklyWindow } from "@/lib/time/window";
+import { CONTENT_TYPE_LABEL } from "@/lib/taxonomy";
+import { dateText, shortSynopsis } from "@/lib/text";
 import Link from "next/link";
 
 const rec = (r: { rec_decision: "WATCH" | "SKIP" | null; rec_explanation: string | null }) =>
@@ -50,8 +53,26 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const genreRows = await Promise.all(prefs.genres.slice(0, 3).map(async (g) => ({ g, items: await listReleases(user.id, { ...f, genres: [g], to: today, limit: 12 }) })));
   const langRows = await Promise.all(prefs.languages.slice(0, 3).map(async (l) => ({ l, items: await listReleases(user.id, { ...f, languages: [l], to: today, limit: 12 }) })));
 
+  // Hero carousel: top-rated newly released movies and series, always 5 to 10 slides.
+  const featured = await featuredReleases(user.id, today);
+  const slides: Slide[] = featured.map((r) => ({
+    id: r.id,
+    title: r.title,
+    type: CONTENT_TYPE_LABEL[r.content_type],
+    meta: [
+      r.vote_average && Number(r.vote_average) > 0 && (r.vote_count ?? 0) >= 5 ? `★ ${r.vote_average}` : null,
+      r.runtime_minutes ? `${r.runtime_minutes} min` : r.episode_count ? `${r.episode_count} episodes` : null,
+      r.genres.slice(0, 2).join(", ") || null,
+      r.platforms[0] ?? null,
+      dateText(r),
+    ].filter(Boolean).join("  •  "),
+    synopsis: shortSynopsis(r.synopsis, 200),
+    image: r.backdrop_url!,
+  }));
+
   return (
     <>
+      <HeroCarousel slides={slides} />
       <PageTitle
         title="Home"
         sub={`${c.total} collected records: ${c.movies} movies, ${c.series} new series, ${c.seasons} new seasons, ${c.episodes} episodes.`}

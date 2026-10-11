@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ReleaseView } from "@/lib/catalogue";
 import { CONTENT_TYPE_LABEL } from "@/lib/taxonomy";
-import { dateText, shortSynopsis } from "@/lib/text";
+import { dateText } from "@/lib/text";
 
 export interface CardRec {
   decision: "WATCH" | "SKIP";
@@ -23,7 +23,6 @@ export default function TitleCard({
   detail,
   rec,
   reasons,
-  synopsis,
   length,
   wide,
 }: {
@@ -31,7 +30,6 @@ export default function TitleCard({
   detail?: string | null;
   rec?: CardRec | null;
   reasons?: string[];
-  synopsis?: string | null;
   length?: string | null;
   wide?: boolean;
 }) {
@@ -43,7 +41,6 @@ export default function TitleCard({
     ]
       .filter(Boolean)
       .join(" · ") || null);
-  const synopsisText = synopsis ?? shortSynopsis(r.synopsis);
   const image = r.backdrop_url ?? r.poster_url;
   const whyText = rec?.reason ?? (reasons && reasons.length ? reasons.join(" · ") : null);
   const [feedback, setFeedback] = useState(r.feedback);
@@ -90,7 +87,7 @@ export default function TitleCard({
   }
 
   return (
-    <article className={`card group flex h-[416px] shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface ${wide ? "w-full" : "w-[280px]"}`}>
+    <article className={`card group flex h-[376px] shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface ${wide ? "w-full" : "w-[280px]"}`}>
       <Link href={`/title/${r.id}`} className="relative block h-[158px] shrink-0 overflow-hidden bg-surface2" aria-label={`Open ${r.title}`}>
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -128,7 +125,6 @@ export default function TitleCard({
           {r.genres.slice(0, 2).map((g) => <span key={g} className="chip">{g}</span>)}
           {r.languages.slice(0, 1).map((g) => <span key={g} className="chip">{g}</span>)}
         </div>
-        <p className="line-clamp-2 h-[34px] shrink-0 text-xs leading-snug text-muted">{synopsisText ?? "Synopsis not available"}</p>
         <p
           className={`line-clamp-2 h-[34px] shrink-0 text-xs leading-snug ${whyText ? "text-ink" : "text-muted"}`}
           title={[rec?.reason, reasons?.join(" · ")].filter(Boolean).join(" — ") || undefined}

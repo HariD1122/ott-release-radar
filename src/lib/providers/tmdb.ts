@@ -51,6 +51,7 @@ export interface TmdbMovie {
   spoken_languages?: { english_name: string; iso_639_1: string }[];
   runtime?: number | null;
   vote_average?: number;
+  vote_count?: number;
   imdb_id?: string | null;
   release_dates?: {
     results: { iso_3166_1: string; release_dates: { type: number; release_date: string; note?: string }[] }[];
@@ -68,6 +69,7 @@ export interface TmdbTv {
   spoken_languages?: { english_name: string; iso_639_1: string }[];
   episode_run_time?: number[];
   vote_average?: number;
+  vote_count?: number;
   seasons?: { season_number: number; air_date: string | null; episode_count: number }[];
   external_ids?: { imdb_id?: string | null };
   "watch/providers"?: TmdbWatch;

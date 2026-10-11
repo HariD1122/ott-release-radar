@@ -40,6 +40,7 @@ interface ReleaseRow {
   runtime_minutes: number | null;
   episode_count: number | null;
   vote_average: number | null;
+  vote_count: number | null;
   source_url: string;
 }
 
@@ -129,6 +130,7 @@ async function collectMovies(from: string, to: string, rows: ReleaseRow[], error
         runtime_minutes: m.runtime || null,
         episode_count: null,
         vote_average: m.vote_average ? Number(m.vote_average.toFixed(1)) : null,
+        vote_count: m.vote_count ?? null,
         source_url: `https://www.themoviedb.org/movie/${m.id}`,
       });
     } catch (e) {
@@ -158,6 +160,7 @@ async function collectSeries(from: string, to: string, rows: ReleaseRow[], error
         release_note: null,
         runtime_minutes: s.episode_run_time?.[0] || null,
         vote_average: s.vote_average ? Number(s.vote_average.toFixed(1)) : null,
+        vote_count: s.vote_count ?? null,
         source_url: `https://www.themoviedb.org/tv/${s.id}`,
       };
       const seasons = (s.seasons ?? []).filter((x) => x.season_number > 0 && x.air_date);
@@ -224,8 +227,8 @@ async function upsert(rows: ReleaseRow[]): Promise<{ inserted: number; updated: 
       `INSERT INTO releases (provider_key, tmdb_id, imdb_id, title, content_type, series_tmdb_id, season_number,
          episode_number, episode_title, synopsis, poster_url, backdrop_url, genres, languages, platforms,
          platform_details, platform_status, release_date, release_at, release_precision, release_date_type,
-         verification_status, release_note, runtime_minutes, episode_count, vote_average, source_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
+         verification_status, release_note, runtime_minutes, episode_count, vote_average, source_url, vote_count)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
        ON CONFLICT (provider_key) DO UPDATE SET
          imdb_id=EXCLUDED.imdb_id, title=EXCLUDED.title, episode_title=EXCLUDED.episode_title,
          synopsis=EXCLUDED.synopsis, poster_url=EXCLUDED.poster_url, backdrop_url=EXCLUDED.backdrop_url,
@@ -234,7 +237,7 @@ async function upsert(rows: ReleaseRow[]): Promise<{ inserted: number; updated: 
          release_date=EXCLUDED.release_date, release_at=EXCLUDED.release_at,
          release_precision=EXCLUDED.release_precision, verification_status=EXCLUDED.verification_status,
          release_note=EXCLUDED.release_note, runtime_minutes=EXCLUDED.runtime_minutes,
-         episode_count=EXCLUDED.episode_count, vote_average=EXCLUDED.vote_average,
+         episode_count=EXCLUDED.episode_count, vote_average=EXCLUDED.vote_average, vote_count=EXCLUDED.vote_count,
          last_fetched_at=now(), updated_at=now()
        RETURNING (xmax = 0) AS inserted`,
       [
@@ -242,7 +245,7 @@ async function upsert(rows: ReleaseRow[]): Promise<{ inserted: number; updated: 
         r.episode_number, r.episode_title, r.synopsis, r.poster_url, r.backdrop_url, r.genres, r.languages,
         m.platforms, JSON.stringify(details), m.status, r.release_date, r.release_at, r.release_precision,
         r.release_date_type, r.verification_status, r.release_note, r.runtime_minutes, r.episode_count,
-        r.vote_average, r.source_url,
+        r.vote_average, r.source_url, r.vote_count,
       ],
     );
     if (res[0]?.inserted) inserted++;
