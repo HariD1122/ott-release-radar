@@ -1,4 +1,4 @@
-# OTT Release Radar — Version 12
+# OTT Release Radar — Version 12.1
 
 > **Database:** this project uses **Neon PostgreSQL** (not Supabase). Connection is the `DATABASE_URL` environment variable; tables are created by `npm run db:migrate`.
 
@@ -143,3 +143,12 @@ Secrets are server-side only; PINs are Argon2id-hashed; sessions are DB-backed (
 * Fixed: title detail page crashed (client helper called from a server page); RapidAPI parsing of foreign-country entries; filter bar re-saving on load; old /preferences link now redirects server-side.
 * RapidAPI quota protection (default 5 calls per run, 5 calls kept in reserve, titles with unknown platforms checked first); expired sessions and old login attempts are cleaned automatically.
 * Test tooling: `npm test` (53 tests), `scripts/audit.mts` (database + live service audit), `scripts/deep-test.mjs` and `scripts/prod-test.mjs` (end-to-end checks against a deployed URL).
+
+## Version 12.1 changelog
+
+* Light, professional theme (white background, black text, azure accent) with uniform 280 x 376 landscape cards and scroll arrows on shelves.
+* Hero carousel on Home: top-rated newly released movies and series (vote-weighted rating, 5 to 10 slides; migration 003 adds `releases.vote_count`).
+* Colour-coded one-row filter toolbar (Genre / Language / Platform / Type dropdowns, search, dates) that saves to the profile; stat pills and a segmented week switch; shorter text on every page.
+* Cards no longer show the synopsis (it is on the title page); the title page no longer overlaps the card with the details.
+* Telegram messages no longer include the WATCH/SKIP line; the website still shows AI opinions. Delivery history is no longer displayed on the website (still stored in `digest_history`).
+* `scripts/sync-check.mjs` compares GitHub, Vercel and Neon (code commit, migrations, environment variables).
