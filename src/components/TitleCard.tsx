@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ReleaseView } from "@/lib/catalogue";
 import { CONTENT_TYPE_LABEL } from "@/lib/taxonomy";
+import { shortSynopsis } from "@/lib/text";
 
 export interface CardRec {
   decision: "WATCH" | "SKIP";
@@ -41,6 +42,15 @@ export default function TitleCard({
   length?: string | null;
   wide?: boolean;
 }) {
+  const lengthText =
+    length ??
+    ([
+      r.runtime_minutes ? `${r.runtime_minutes} min` : null,
+      r.content_type === "episode" ? `S${r.season_number}E${r.episode_number}` : r.episode_count ? `${r.episode_count} episodes` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ") || null);
+  const synopsisText = synopsis ?? shortSynopsis(r.synopsis);
   const [feedback, setFeedback] = useState(r.feedback);
   const [inList, setInList] = useState(r.in_watchlist);
   const [busy, setBusy] = useState(false);
@@ -119,10 +129,9 @@ export default function TitleCard({
         <div className="flex flex-wrap gap-1">
           {r.genres.slice(0, 2).map((g) => <span key={g} className="chip">{g}</span>)}
           {r.languages.slice(0, 1).map((g) => <span key={g} className="chip">{g}</span>)}
-          {r.runtime_minutes ? <span className="chip">{r.runtime_minutes} min</span> : null}
         </div>
-        {length && <p className="text-xs text-muted">{length}</p>}
-        {synopsis && <p className="line-clamp-2 text-xs italic text-muted">{synopsis}</p>}
+        {lengthText && <p className="text-xs text-muted">⏱ {lengthText}</p>}
+        <p className="line-clamp-2 min-h-[2rem] text-xs italic text-muted">{synopsisText ?? "Synopsis not available"}</p>
         {rec && <p className="text-xs leading-snug text-ink/90">{rec.reason}</p>}
         {reasons && reasons.length > 0 && <p className="text-[11px] leading-snug text-muted">{reasons.join(" · ")}</p>}
         <div className="mt-auto flex items-center gap-1.5 pt-2">

@@ -84,13 +84,11 @@ export default function Filters({
   const [p, setP] = useState<Prefs>(saved);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const first = useRef(true);
+  const lastSaved = useRef(JSON.stringify(saved));
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    // Only write when the selection really differs from what is stored (no save on page load).
+    if (JSON.stringify(p) === lastSaved.current) return;
     setStatus({ ok: true, text: "Saving…" });
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
@@ -98,6 +96,7 @@ export default function Filters({
         const res = await fetch("/api/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(p) });
         const j = await res.json();
         if (!res.ok || !j.ok) throw new Error(j.error ?? "Could not save");
+        lastSaved.current = JSON.stringify(p);
         setStatus({ ok: true, text: "Saved to your profile" });
         router.refresh();
       } catch (e) {
