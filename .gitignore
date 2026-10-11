@@ -42,3 +42,7 @@ next-env.d.ts
 
 !.env.example
 scripts/probe-output/
+
+# private documents (contain login details)
+docs/private/
+docs/*.html

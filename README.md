@@ -29,7 +29,13 @@ Platform status per release: `confirmed_both` (TMDB and RapidAPI agree), `tmdb_o
 * **Personalized for You** (`rankPersonalized`): saved genres/languages/platforms/types + Like/Dislike history + recency. Transparent rules, not a trained model. Feedback only counts once there are 3+ reactions, and weights are shrunk so one reaction cannot swing results. Directly disliked titles are dropped from this list. Needs a genre match or positive feedback signal.
 * **Recommended for Your Filters** (`rankForFilters`): explicit filters only (AND across genre/language/platform/type, OR within each), newest release first. The function takes **no feedback argument**, so Like/Dislike cannot change or hide anything here. Disliked titles stay visible.
 
-## Project layout / Components Map
+## Components Map (plain-language chart)
+
+A one-page chart anyone can follow: [docs/Components-Map.pdf](docs/Components-Map.pdf) (preview below). Rebuild it with `node docs/components-map/build.mjs`.
+
+![Components Map](docs/Components-Map.png)
+
+## Project layout / Components Map (technical)
 
 ```
 USER ──> Next.js website (src/app)
