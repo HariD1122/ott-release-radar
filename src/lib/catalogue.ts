@@ -52,6 +52,9 @@ export interface ReleaseFilters {
   search?: string;
   types?: string[];
   genre?: string;
+  genres?: string[]; // multi-select: a title matches if it has ANY of these
+  languages?: string[];
+  platforms?: string[]; // matched against CONFIRMED platforms only
   language?: string;
   platform?: string;
   from?: string;
@@ -74,6 +77,9 @@ export async function listReleases(userId: string, f: ReleaseFilters = {}): Prom
   if (f.genre) add("? = ANY(r.genres)", f.genre);
   if (f.language) add("? = ANY(r.languages)", f.language);
   if (f.platform) add("? = ANY(r.platforms)", f.platform);
+  if (f.genres?.length) add("r.genres && ?::text[]", f.genres);
+  if (f.languages?.length) add("r.languages && ?::text[]", f.languages);
+  if (f.platforms?.length) add("r.platforms && ?::text[]", f.platforms);
   if (f.from) add("r.release_date >= ?::date", f.from);
   if (f.to) add("r.release_date <= ?::date", f.to);
   if (f.watchlistOnly) where.push("w.release_id IS NOT NULL");
@@ -130,6 +136,11 @@ export async function getPrefs(userId: string): Promise<Prefs> {
   );
   const r = rows[0];
   return { genres: r?.genres ?? [], languages: r?.languages ?? [], platforms: r?.platforms ?? [], contentTypes: r?.content_types ?? [] };
+}
+
+export async function prefsUpdatedAt(userId: string): Promise<string | null> {
+  const r = await q<{ updated_at: string }>("SELECT updated_at FROM user_preferences WHERE user_id = $1", [userId]);
+  return r[0]?.updated_at ?? null;
 }
 
 export async function savePrefs(userId: string, p: Prefs) {

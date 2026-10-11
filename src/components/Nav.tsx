@@ -12,11 +12,11 @@ const LINKS = [
   { href: "/episodes", label: "Episodes", icon: ListVideo },
   { href: "/watchlist", label: "Watchlist", icon: Bookmark },
   { href: "/digest", label: "Weekly Digest", icon: Send },
-  { href: "/preferences", label: "Preferences", icon: SlidersHorizontal },
+  { href: "/profile", label: "Profile", icon: SlidersHorizontal },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function Nav({ loginId }: { loginId: string }) {
+export default function Nav({ name }: { name: string }) {
   const path = usePathname();
   const router = useRouter();
   async function logout() {
@@ -49,7 +49,7 @@ export default function Nav({ loginId }: { loginId: string }) {
           <Search size={14} className="absolute left-2.5 top-2.5 text-muted" aria-hidden />
           <input name="q" aria-label="Search catalogue" placeholder="Search titles" className="input !py-1.5 !pl-8 w-44" />
         </form>
-        <span className="hidden text-xs text-muted xl:inline">{loginId}</span>
+        <span className="hidden text-xs text-muted xl:inline">{name}</span>
         <button className="btn !px-2.5 !py-1.5" onClick={logout} aria-label="Log out">
           <LogOut size={15} />
         </button>

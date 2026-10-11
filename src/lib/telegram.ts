@@ -10,6 +10,11 @@ export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
 const fmtIst = (iso: string) =>
   new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 
+export function describeFilters(p: { genres: string[]; languages: string[]; platforms: string[]; contentTypes: string[] }): string {
+  const part = (label: string, v: string[]) => `${label}: ${v.length ? v.join(", ") : "any"}`;
+  return [part("Genres", p.genres), part("Languages", p.languages), part("Platforms", p.platforms), part("Types", p.contentTypes)].join(" | ");
+}
+
 function entryBlock(i: number, e: DigestEntry, showFeedback: boolean): string {
   const lines = [`<b>${i}. ${esc(e.title)}</b> — ${esc(e.typeLabel)}${e.detail ? ` (${esc(e.detail)})` : ""}`];
   lines.push(`📅 ${esc(e.dateLabel)}${e.datePrecision === "date" ? " (date-only)" : ""}`);
@@ -31,7 +36,8 @@ export function renderTelegram(d: Digest): string[] {
     "🎬 <b>OTT Release Radar</b>",
     `Week: ${esc(fmtIst(d.window.start))} → ${esc(fmtIst(d.window.end))} IST`,
     `Generated: ${esc(fmtIst(d.generatedAt))} IST`,
-    `Confirmed eligible releases: <b>${d.eligibleCount}</b>`,
+    `Confirmed releases in this window: <b>${d.eligibleCount}</b> · matching your saved filters: <b>${d.matchCount}</b>`,
+    `🔎 Filters — ${esc(describeFilters(d.appliedFilters))}`,
     "<i>Recommendations depend on available metadata; release dates are calendar dates from TMDB.</i>",
   ].join("\n");
 
@@ -41,11 +47,11 @@ export function renderTelegram(d: Digest): string[] {
     ? `Ranked using your preferences and ${p.feedbackCount} Like/Dislike reactions.`
     : `Based on your saved preferences. It will improve as you add Likes/Dislikes (${p.feedbackCount} so far).`;
   const fHead = `🎬 <b>RECOMMENDED FOR YOUR FILTERS</b> (${d.filters.entries.length})`;
-  const fNote = "Matches your selected genres, languages, platforms and types only. Newest first; Likes/Dislikes are not used.";
+  const fNote = "Everything here matches your saved filters. Newest first; Likes/Dislikes are not used.";
 
   type Section = { head: string; note: string; blocks: string[]; empty: string };
   const sections: Section[] = [
-    { head: pHead, note: pNote, blocks: p.entries.map((e, i) => entryBlock(i + 1, e, true)), empty: "No personalized matches are available for this weekly window." },
+    { head: pHead, note: pNote, blocks: p.entries.map((e, i) => entryBlock(i + 1, e, true)), empty: "No personalized matches are available for this weekly window (only titles matching your saved filters are considered)." },
     { head: fHead, note: fNote, blocks: d.filters.entries.map((e, i) => entryBlock(i + 1, e, false)), empty: "No titles match the selected filters for this window." },
   ];
 

@@ -15,6 +15,7 @@ const LOCK_MINUTES = 15;
 export interface SessionUser {
   id: string;
   loginId: string;
+  displayName: string;
 }
 
 export const normalizeLoginId = (s: string) => s.trim().replace(/\s+/g, " ").toUpperCase();
@@ -25,6 +26,14 @@ export const hashPin = (pin: string) => argon2.hash(pin, { type: argon2.argon2id
 
 export function validatePinFormat(pin: string): string | null {
   return /^\d{4,12}$/.test(pin) ? null : "PIN must be 4 to 12 digits.";
+}
+
+/** Single-owner app: the PIN alone signs in the one active account (the login ID is never shown). */
+export async function loginOwner(pin: string, ip: string | null): Promise<LoginResult> {
+  const rows = await q<{ login_id: string }>("SELECT login_id FROM users WHERE status = 'active' ORDER BY created_at LIMIT 1");
+  if (!rows[0]) return { ok: false, error: "Invalid PIN." };
+  const r = await login(rows[0].login_id, pin, ip);
+  return r.ok ? r : { ...r, error: r.error.replace("login ID or PIN", "PIN") };
 }
 
 export type LoginResult =
@@ -97,12 +106,12 @@ async function sessionIdFromCookie(): Promise<string | null> {
 export async function getUser(): Promise<SessionUser | null> {
   const sid = await sessionIdFromCookie();
   if (!sid) return null;
-  const rows = await q<{ id: string; login_id: string }>(
-    `SELECT u.id, u.login_id FROM sessions s JOIN users u ON u.id = s.user_id
+  const rows = await q<{ id: string; login_id: string; display_name: string | null }>(
+    `SELECT u.id, u.login_id, u.display_name FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.id = $1 AND s.expires_at > now() AND u.status = 'active'`,
     [sid],
   );
-  return rows[0] ? { id: rows[0].id, loginId: rows[0].login_id } : null;
+  return rows[0] ? { id: rows[0].id, loginId: rows[0].login_id, displayName: rows[0].display_name || rows[0].login_id } : null;
 }
 
 /** For pages and layouts: redirects to /login when not signed in. */

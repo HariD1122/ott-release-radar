@@ -33,7 +33,7 @@ Platform status per release: `confirmed_both` (TMDB and RapidAPI agree), `tmdb_o
 USER ──> Next.js website (src/app)
  ├─ /login → src/lib/auth/auth.ts  (Argon2id, DB sessions, signed HTTP-only cookie, lockout)
  ├─ proxy.ts  (cookie-presence redirect) + requireUser()/guard() (real checks)
- ├─ Pages: Home, New Releases, Movies, Series, Episodes, Watchlist, Weekly Digest, Preferences, Settings, Title detail
+ ├─ Pages: Home, New Releases, Movies, Series, Episodes, Watchlist, Weekly Digest, Profile (permanent filters), Settings, Title detail
  ├─ API routes (src/app/api): feedback, watchlist, follow, preferences, collect, recommendations,
  │      digest (preview), digest/send (MANUAL), telegram/test|detect, cron/collect, cron/digest (AUTOMATIC)
  └─ Services (src/lib)
@@ -57,7 +57,7 @@ Automatic and manual delivery are separate entry points with separate idempotenc
 1. Install Node 20+ and run `npm install`.
 2. Copy `.env.example` to `.env.local` and fill in every value (see below).
 3. Create the database tables: `npm run db:migrate`
-4. Create your account once: set `SEED_LOGIN_ID` and `SEED_PIN` in `.env.local`, then `npm run db:seed`. Re-running never changes an existing account or PIN. Change the PIN later in **Settings**. Afterwards you can delete `SEED_PIN` from `.env.local`.
+4. Create your account once (the site signs in with the PIN only; the login ID is internal): set `SEED_LOGIN_ID` and `SEED_PIN` in `.env.local`, then `npm run db:seed`. Re-running never changes an existing account or PIN. Change the PIN later in **Settings**. Afterwards you can delete `SEED_PIN` from `.env.local`.
 5. Fetch data: `npm run collect` (or the **Refresh Data** button). The first run takes ~2 minutes.
 6. Start the app: `npm run dev`, open http://localhost:3000.
 
@@ -120,7 +120,7 @@ Never commit `.env.local`. Never prefix secrets with `NEXT_PUBLIC_`.
 ## Manual testing checklist
 
 - [ ] Wrong PIN shows a generic error; correct login works; logout then visiting `/` redirects to `/login`
-- [ ] Preferences save and survive logout/login
+- [ ] Profile page: genres/platforms/languages save, show "confirmed in your database", and survive logout/login on another device
 - [ ] Like → Dislike replaces → click again clears; same title stays in sync across both columns
 - [ ] Watchlist add/remove persists after reload
 - [ ] Search (header) and filters (Movies, Series, Episodes, New Releases) change results

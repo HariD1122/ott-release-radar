@@ -1,11 +1,13 @@
 import ApiButton from "@/components/ApiButton";
+import Filters from "@/components/Filters";
 import TitleCard from "@/components/TitleCard";
 import { Notice, PageTitle, Row } from "@/components/ui";
-import { counts, eligibleReleases, listReleases } from "@/lib/catalogue";
+import { counts, distinctValues, eligibleReleases, listReleases } from "@/lib/catalogue";
 import { requireUser } from "@/lib/auth/auth";
 import { buildDigest } from "@/lib/digest";
 import { getPrefs } from "@/lib/catalogue";
-import { first, type SP } from "@/lib/page-helpers";
+import { first, savedFilters, type SP } from "@/lib/page-helpers";
+import { matchFilters } from "@/lib/ranking";
 import { toIstDate, weeklyWindow } from "@/lib/time/window";
 import Link from "next/link";
 
@@ -31,19 +33,22 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     );
   }
 
-  const [prefs, c, digest, thisWeek, movies, series, seasons, episodes, watch] = await Promise.all([
-    getPrefs(user.id),
+  const prefs = await getPrefs(user.id);
+  const f = savedFilters(prefs);
+  const [options, c, digest, thisWeekAll, movies, series, seasons, episodes, watch] = await Promise.all([
+    distinctValues(),
     counts(),
     buildDigest(user.id, { ai: "cached" }),
     eligibleReleases(user.id, win, now),
-    listReleases(user.id, { types: ["movie"], to: today, limit: 12 }),
-    listReleases(user.id, { types: ["series"], to: today, limit: 12 }),
-    listReleases(user.id, { types: ["season"], to: today, limit: 12 }),
-    listReleases(user.id, { types: ["episode"], to: today, limit: 12 }),
+    listReleases(user.id, { ...f, types: ["movie"], to: today, limit: 12 }),
+    listReleases(user.id, { ...f, types: ["series"], to: today, limit: 12 }),
+    listReleases(user.id, { ...f, types: ["season"], to: today, limit: 12 }),
+    listReleases(user.id, { ...f, types: ["episode"], to: today, limit: 12 }),
     listReleases(user.id, { watchlistOnly: true, limit: 24 }),
   ]);
-  const genreRows = await Promise.all(prefs.genres.slice(0, 3).map(async (g) => ({ g, items: await listReleases(user.id, { genre: g, to: today, limit: 12 }) })));
-  const langRows = await Promise.all(prefs.languages.slice(0, 3).map(async (l) => ({ l, items: await listReleases(user.id, { language: l, to: today, limit: 12 }) })));
+  const thisWeek = thisWeekAll.filter((r) => matchFilters(r, prefs) !== null);
+  const genreRows = await Promise.all(prefs.genres.slice(0, 3).map(async (g) => ({ g, items: await listReleases(user.id, { ...f, genres: [g], to: today, limit: 12 }) })));
+  const langRows = await Promise.all(prefs.languages.slice(0, 3).map(async (l) => ({ l, items: await listReleases(user.id, { ...f, languages: [l], to: today, limit: 12 }) })));
 
   return (
     <>
@@ -57,9 +62,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
         }
       />
+      <Filters action="/" current={{}} options={options} saved={prefs} showType showText={false} />
       {c.total === 0 && <Notice tone="warn">No data has been collected yet. Press Refresh Data to fetch releases.</Notice>}
 
-      <Row title="New This Week" count={thisWeek.length} hint={`Released so far in the current weekly window (closes ${win.endDate} 6:00 PM IST).`} empty="No verified releases yet in the current weekly window.">
+      <Row title="New This Week" count={thisWeek.length} hint={`Released so far in the current weekly window (closes ${win.endDate} 6:00 PM IST) and matching your saved filters.`} empty="No verified releases yet in the current weekly window.">
         {thisWeek.slice(0, 24).map((r) => <TitleCard key={r.id} release={r} rec={rec(r)} />)}
       </Row>
 

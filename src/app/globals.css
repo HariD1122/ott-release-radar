@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #090b10;
-  --surface: #131722;
-  --surface-2: #1b2030;
-  --line: #262c3f;
-  --text: #e8eaf2;
-  --muted: #9aa3bb;
-  --accent: #f0b429;
-  --accent-ink: #1a1405;
+  --bg: #050f1c;
+  --surface: #0b1b30;
+  --surface-2: #11284a;
+  --line: #1d3a63;
+  --text: #e8f2ff;
+  --muted: #8fb3dc;
+  --accent: #3aa0ff;
+  --accent-ink: #031526;
   --good: #3ecf8e;
   --bad: #ff6b6b;
 }
@@ -29,7 +29,7 @@
 html { color-scheme: dark; }
 
 body {
-  background: radial-gradient(1200px 500px at 70% -10%, #1a2140 0%, transparent 60%), var(--bg);
+  background: radial-gradient(1200px 520px at 70% -10%, #0a4a8f 0%, transparent 60%), var(--bg);
   color: var(--text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   min-height: 100vh;
@@ -54,10 +54,10 @@ body {
   background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
   transition: background .15s, transform .05s;
 }
-.btn:hover:not(:disabled) { background: #232a3f; }
+.btn:hover:not(:disabled) { background: #17355f; }
 .btn:disabled { opacity: .55; cursor: not-allowed; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn-primary:hover:not(:disabled) { background: #ffc94d; }
+.btn-primary:hover:not(:disabled) { background: #6bbaff; }
 .chip {
   display: inline-block; border-radius: 999px; padding: 0.12rem 0.55rem; font-size: 0.7rem;
   border: 1px solid var(--line); color: var(--muted); background: rgba(255,255,255,.03);

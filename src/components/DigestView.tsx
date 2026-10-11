@@ -12,7 +12,7 @@ function Entries({ entries, digest, empty, showReasons }: { entries: DigestEntry
         if (!r) return null;
         return (
           <div key={e.key} className="relative">
-            <span className="absolute -left-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-ink" style={{ color: "#1a1405" }}>{i + 1}</span>
+            <span className="absolute -left-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-ink">{i + 1}</span>
             <TitleCard
               release={r}
               wide
@@ -35,7 +35,7 @@ export default function DigestView({ digest }: { digest: Digest }) {
     <div>
       <Notice>
         Window: <b>{formatIst(new Date(w.start))}</b> → <b>{formatIst(new Date(w.end))}</b> IST · Generated {formatIst(new Date(digest.generatedAt))} IST ·{" "}
-        <b>{digest.eligibleCount}</b> confirmed eligible releases. Release dates are calendar dates (TMDB provides no exact time), so each date belongs to exactly one weekly window.
+        <b>{digest.eligibleCount}</b> confirmed releases, <b>{digest.matchCount}</b> match your saved filters (only those are recommended and sent to Telegram). Release dates are calendar dates (TMDB provides no exact time), so each date belongs to exactly one weekly window.
       </Notice>
       {digest.aiError && <Notice tone="warn">{digest.aiError}. Showing the digest without AI WATCH/SKIP opinions.</Notice>}
       <div className="grid gap-8 lg:grid-cols-2">

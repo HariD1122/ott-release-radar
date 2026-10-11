@@ -7,7 +7,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requireUser();
   return (
     <>
-      <Nav loginId={user.loginId} />
+      <Nav name={user.displayName} />
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
     </>
   );

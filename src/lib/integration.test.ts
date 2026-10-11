@@ -102,6 +102,21 @@ describe.skipIf(!hasDb)("database integration", () => {
     expect(await cat.listReleases(userId, { search: "%%%zzz" })).toHaveLength(0);
   });
 
+  it("multi-select filters: ANY within a dimension, ALL across; platform needs a confirmed match", async () => {
+    const n = async (f: Parameters<typeof cat.listReleases>[1]) => (await cat.listReleases(userId, { search: "itest mov", ...f })).length;
+    expect(await n({ genres: ["Comedy", "Thriller"] })).toBe(1);
+    expect(await n({ genres: ["Comedy"] })).toBe(0);
+    expect(await n({ genres: ["Thriller"], languages: ["Tamil", "Hindi"], platforms: ["Zee5", "Netflix"] })).toBe(1);
+    expect(await n({ genres: ["Thriller"], platforms: ["Zee5"] })).toBe(0);
+  });
+
+  it("saved filters persist across a new session (read back from the database)", async () => {
+    await cat.savePrefs(userId, { genres: ["Drama", "Thriller"], languages: ["Hindi", "Tamil"], platforms: ["Netflix"], contentTypes: ["movie", "series"] });
+    const again = await cat.getPrefs(userId);
+    expect(again).toEqual({ genres: ["Drama", "Thriller"], languages: ["Hindi", "Tamil"], platforms: ["Netflix"], contentTypes: ["movie", "series"] });
+    await cat.savePrefs(userId, { genres: ["Thriller"], languages: ["Hindi"], platforms: ["Netflix"], contentTypes: ["movie"] });
+  });
+
   it("automatic delivery is idempotent; manual is independent; failures are recorded; no collection runs", async () => {
     sendMessages.mockResolvedValue({ ok: true, sent: 1, total: 1 });
     const a1 = await deliver.deliverDigest("automatic", userId, past);

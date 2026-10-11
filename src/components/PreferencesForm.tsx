@@ -23,10 +23,13 @@ function Group({ legend, options, selected, onToggle }: { legend: string; option
   );
 }
 
-export default function PreferencesForm({ initial, genres, languages, platforms }: { initial: Prefs; genres: string[]; languages: string[]; platforms: string[] }) {
+const norm = (p: Prefs) => ({ genres: [...p.genres].sort(), languages: [...p.languages].sort(), platforms: [...p.platforms].sort(), contentTypes: [...p.contentTypes].sort() });
+
+export default function PreferencesForm({ initial, genres, languages, platforms, savedAt }: { initial: Prefs; savedAt: string | null; genres: string[]; languages: string[]; platforms: string[] }) {
   const [p, setP] = useState(initial);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [stamp, setStamp] = useState<string | null>(savedAt);
   const toggle = (key: keyof Prefs) => (v: string) =>
     setP((cur) => ({ ...cur, [key]: cur[key].includes(v) ? cur[key].filter((x) => x !== v) : [...cur[key], v] }));
   const opt = (a: string[]) => a.map((v) => ({ value: v, label: v }));
@@ -37,9 +40,15 @@ export default function PreferencesForm({ initial, genres, languages, platforms 
     try {
       const res = await fetch("/api/preferences", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(p) });
       const j = await res.json();
-      setMsg({ ok: res.ok && j.ok, text: res.ok && j.ok ? "Preferences saved." : j.error ?? "Could not save." });
-    } catch {
-      setMsg({ ok: false, text: "Network error. Preferences were not saved." });
+      if (!res.ok || !j.ok) throw new Error(j.error ?? "Could not save.");
+      // Confirm with a fresh read: what the database returns is what we show.
+      const back = await (await fetch("/api/preferences", { cache: "no-store" })).json();
+      const same = JSON.stringify(norm(back.preferences)) === JSON.stringify(norm(p));
+      setStamp(back.updatedAt);
+      if (same) setP(back.preferences);
+      setMsg({ ok: same, text: same ? "Saved and confirmed in your database. It will be remembered on every device." : "Saved, but the stored values differ from what you selected. Please reload." });
+    } catch (e) {
+      setMsg({ ok: false, text: `Not saved: ${(e as Error).message}` });
     } finally {
       setBusy(false);
     }
@@ -53,7 +62,8 @@ export default function PreferencesForm({ initial, genres, languages, platforms 
       <Group legend="Streaming platforms" options={opt(platforms)} selected={p.platforms} onToggle={toggle("platforms")} />
       <p className="-mt-4 mb-6 text-xs text-muted">A preferred platform is only matched when availability is confirmed. Disney+ Hotstar is now JioHotstar.</p>
       <Group legend="Content types" options={[...CONTENT_TYPE_OPTIONS]} selected={p.contentTypes} onToggle={toggle("contentTypes")} />
-      <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "Saving…" : "Save preferences"}</button>
+      <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? "Saving…" : "Save my profile filters"}</button>
+      {stamp && <p className="mt-2 text-xs text-muted">Last synced to the database: {new Date(stamp).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</p>}
       {msg && <p role="status" className={`mt-2 text-sm ${msg.ok ? "text-good" : "text-bad"}`}>{msg.text}</p>}
     </div>
   );

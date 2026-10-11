@@ -149,7 +149,8 @@ export function rankPersonalized<T extends Rankable>(
         );
       }
     }
-    if (g.length === 0 && fb <= 0) continue; // needs a genre match or a positive feedback signal
+    // Needs a genre match or a positive feedback signal (unless no genre filter is set at all).
+    if (prefs.genres.length > 0 && g.length === 0 && fb <= 0) continue;
     if (r.release_date) {
       const age = (Date.parse(today) - Date.parse(r.release_date)) / 86_400_000;
       score += Math.max(0, 1 - Math.max(0, age) / 14);

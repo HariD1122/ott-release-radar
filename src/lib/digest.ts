@@ -2,7 +2,7 @@
 // send all call buildDigest(); nothing else decides eligibility, categories or ordering.
 import { eligibleReleases, feedbackHistory, getPrefs, type ReleaseView } from "./catalogue";
 import { ensureRecommendations, type Rec } from "./gemini";
-import { rankForFilters, rankPersonalized, type FeedbackItem, type Prefs } from "./ranking";
+import { matchFilters, rankForFilters, rankPersonalized, type FeedbackItem, type Prefs } from "./ranking";
 import { CONTENT_TYPE_LABEL } from "./taxonomy";
 import { toIstDate, weeklyWindow, type WeeklyWindow } from "./time/window";
 
@@ -26,7 +26,9 @@ export interface DigestEntry {
 export interface Digest {
   window: { start: string; end: string; startDate: string; endDate: string };
   generatedAt: string;
-  eligibleCount: number;
+  eligibleCount: number; // all verified releases in the window
+  matchCount: number; // those that match the saved profile filters (the only ones that are recommended)
+  appliedFilters: Prefs;
   personalized: { entries: DigestEntry[]; feedbackActive: boolean; feedbackCount: number };
   filters: { entries: DigestEntry[] };
   aiError: string | null;
@@ -105,8 +107,10 @@ export function composeDigest(
   window: WeeklyWindow,
   now: Date,
 ): Digest {
-  const p = rankPersonalized(eligible, prefs, history, toIstDate(now));
-  const f = rankForFilters(eligible, prefs);
+  // The saved profile filters are permanent: nothing outside them is recommended or sent to Telegram.
+  const matching = eligible.filter((r) => matchFilters(r, prefs) !== null);
+  const p = rankPersonalized(matching, prefs, history, toIstDate(now));
+  const f = rankForFilters(matching, prefs);
   return {
     window: {
       start: window.start.toISOString(),
@@ -116,6 +120,8 @@ export function composeDigest(
     },
     generatedAt: now.toISOString(),
     eligibleCount: eligible.length,
+    matchCount: matching.length,
+    appliedFilters: prefs,
     personalized: {
       entries: toEntries(p.ranked.map((x) => ({ item: x.item, reasons: x.reasons }))),
       feedbackActive: p.feedbackActive,
@@ -123,7 +129,7 @@ export function composeDigest(
     },
     filters: { entries: toEntries(f.map((x) => ({ item: x, reasons: x.reasons }))) },
     aiError: null,
-    cards: Object.fromEntries(eligible.map((r) => [r.id, r])),
+    cards: Object.fromEntries(matching.map((r) => [r.id, r])),
   };
 }
 

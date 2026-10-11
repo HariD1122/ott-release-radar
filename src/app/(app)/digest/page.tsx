@@ -1,7 +1,9 @@
 import ApiButton from "@/components/ApiButton";
 import DigestView from "@/components/DigestView";
+import Filters from "@/components/Filters";
 import { PageTitle } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
+import { distinctValues, getPrefs } from "@/lib/catalogue";
 import { q } from "@/lib/db";
 import { buildDigest } from "@/lib/digest";
 import { formatIst } from "@/lib/time/window";
@@ -15,9 +17,11 @@ interface Hist {
 
 export default async function DigestPage() {
   const user = await requireUser();
-  const [digest, history] = await Promise.all([
+  const [digest, history, options, prefs] = await Promise.all([
     buildDigest(user.id),
     q<Hist>("SELECT id, trigger_type, status, window_end, personalized_count, filter_count, total_unique, attempt_count, error_summary, started_at FROM digest_history ORDER BY started_at DESC LIMIT 15"),
+    distinctValues(),
+    getPrefs(user.id),
   ]);
   return (
     <>
@@ -31,6 +35,7 @@ export default async function DigestPage() {
           </div>
         }
       />
+      <Filters action="/digest" current={{}} options={options} saved={prefs} showType showText={false} />
       <DigestView digest={digest} />
       <h2 className="mb-2 mt-10 text-lg font-bold">Telegram delivery history</h2>
       {history.length === 0 ? (

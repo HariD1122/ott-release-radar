@@ -1,20 +1,22 @@
 import Filters from "@/components/Filters";
 import { Grid, PageTitle } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
-import { distinctValues, listReleases } from "@/lib/catalogue";
-import { currentParams, filtersFromParams, first, type SP } from "@/lib/page-helpers";
+import { distinctValues, getPrefs, listReleases } from "@/lib/catalogue";
+import { currentParams, filtersFromParams, savedFilters, type SP } from "@/lib/page-helpers";
 
 export default async function Series({ searchParams }: { searchParams: Promise<SP> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const t = first(sp.type);
-  const types = t === "series" || t === "season" ? [t] : ["series", "season"];
-  const [options, items] = await Promise.all([distinctValues(), listReleases(user.id, { ...filtersFromParams(sp), types, limit: 120 })]);
+  const prefs = await getPrefs(user.id);
+  const [options, items] = await Promise.all([
+    distinctValues(),
+    listReleases(user.id, { ...savedFilters(prefs), ...filtersFromParams(sp), types: ["series", "season"], limit: 120 }),
+  ]);
   return (
     <>
-      <PageTitle title="Series" sub="New series and new seasons, with season and episode counts where TMDB provides them." />
-      <Filters action="/series" current={currentParams(sp)} options={options} showDates />
-      <Grid releases={items} empty="No collected series match." />
+      <PageTitle title="Series" sub="New series and new seasons, filtered by your saved profile filters." />
+      <Filters action="/series" current={currentParams(sp)} options={options} saved={prefs} showDates />
+      <Grid releases={items} empty="No collected series match your saved filters. Clear a filter above to see more." />
     </>
   );
 }

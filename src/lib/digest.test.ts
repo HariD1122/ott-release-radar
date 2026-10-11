@@ -26,6 +26,7 @@ describe("composeDigest + renderTelegram", () => {
   it("builds two separate categories with the same eligible set", () => {
     const d = composeDigest(releases, prefs, [], w, now);
     expect(d.eligibleCount).toBe(3);
+    expect(d.matchCount).toBe(2); // Comedy title is outside the saved genre filter
     expect(d.filters.entries.map((e) => e.releaseId)).toEqual(["b", "a"]); // Comedy excluded by genre filter
     expect(d.personalized.entries.length).toBeGreaterThan(0);
   });
@@ -39,6 +40,22 @@ describe("composeDigest + renderTelegram", () => {
     const after = composeDigest(releases, prefs, history, w, now);
     expect(after.filters.entries.map((e) => e.releaseId)).toEqual(base.filters.entries.map((e) => e.releaseId));
     expect(after.personalized.entries.map((e) => e.releaseId)).not.toContain("a");
+  });
+
+  it("only recommends titles that match ALL saved filter dimensions", () => {
+    const mixed = [
+      rel("ok"),
+      rel("wrong-lang", { languages: ["Tamil"] }),
+      rel("wrong-platform", { platforms: ["Zee5"] }),
+      rel("no-platform", { platforms: [] }),
+      rel("wrong-genre", { genres: ["Comedy"] }),
+    ];
+    const d = composeDigest(mixed, prefs, [], w, now);
+    expect(d.eligibleCount).toBe(5);
+    expect(d.matchCount).toBe(1);
+    expect(d.personalized.entries.map((e) => e.releaseId)).toEqual(["ok"]);
+    expect(d.filters.entries.map((e) => e.releaseId)).toEqual(["ok"]);
+    expect(renderTelegram(d).join(" ")).not.toContain("wrong-lang");
   });
 
   it("collapses episodes of one season into one entry", () => {
@@ -57,7 +74,7 @@ describe("composeDigest + renderTelegram", () => {
     expect(text).toContain("RECOMMENDED FOR YOUR FILTERS");
     expect(text).toContain("Title &lt;a&gt; &amp; Co");
     const empty = renderTelegram(composeDigest([], prefs, [], w, now)).join("\n");
-    expect(empty).toContain("No personalized matches are available for this weekly window.");
+    expect(empty).toContain("No personalized matches are available for this weekly window");
     expect(empty).toContain("No titles match the selected filters for this window.");
   });
 
