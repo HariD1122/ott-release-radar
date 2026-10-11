@@ -2,6 +2,8 @@
 //   node docs/components-map/build.mjs
 // Output:  docs/Components-Map.pdf                     (safe to share: no login details)
 //          docs/private/Components-Map-with-login.pdf   (git-ignored: includes the website address and PIN)
+// Style follows the Aangan Studio reference chart: navy header bar, navy "Who" blocks, pastel lanes,
+// boxes colour-coded by stage, dashed arrows, colour legend, "Applications used" + "Logins" panels.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -13,156 +15,163 @@ const CHROME = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Ap
 const SITE = "ott-release-radar-omega.vercel.app";
 const PIN = process.env.SEED_PIN || "(your PIN)";
 
-const COLORS = {
-  you: "#b45309", app: "#0b63c5", neon: "#0f766e", tmdb: "#0e7490",
-  rapid: "#4f46e5", gemini: "#7c3aed", tg: "#0284c7",
-};
-
-// lanes (rows)
-const LANES = [
-  { id: "A", name: "You", app: "App: this website", color: COLORS.you },
-  { id: "B", name: "The App", app: "App: Vercel", color: COLORS.app },
-  { id: "C", name: "The Memory", app: "App: Neon database", color: COLORS.neon },
-  { id: "D", name: "Movie List", app: "App: TMDB", color: COLORS.tmdb },
-  { id: "E", name: "Streaming Check", app: "App: RapidAPI", color: COLORS.rapid },
-  { id: "F", name: "AI Model", app: "App: Google Gemini", color: COLORS.gemini },
-  { id: "G", name: "Telegram", app: "App: Telegram bot", color: COLORS.tg },
+// stage colours (same idea as the reference: each column has its own colour)
+const STAGES = [
+  { name: "Trigger", legend: "What kicks it off", fill: "#ece8fa", line: "#6d4fd0", ink: "#5b3fc4" },
+  { name: "Input", legend: "What goes in", fill: "#e1effd", line: "#3b82f6", ink: "#1d63d8" },
+  { name: "Context", legend: "Rules it follows", fill: "#e3f6e9", line: "#22a355", ink: "#157a3e" },
+  { name: "Processing", legend: "What the app does", fill: "#fff0d4", line: "#f59e0b", ink: "#c26a05" },
+  { name: "AI", legend: "What the AI adds", fill: "#fde6f2", line: "#ec4899", ink: "#c2237a" },
+  { name: "Output", legend: "What you get", fill: "#fde3df", line: "#ef4444", ink: "#c62828" },
 ];
 
-const COLS = ["Trigger", "Input", "Context", "Processing", "AI", "Output"];
-const CAPTIONS = ["What starts it", "Information given", "Rules and knowledge used", "What the system does", "AI writes / decides", "Result"];
+const LANES = [
+  { id: "A", name: "You", sub: "App: this website", bg: "#e8eefb" },
+  { id: "B", name: "OTT Radar App", sub: "App: Vercel", bg: "#fff4d6" },
+  { id: "C", name: "The Memory", sub: "App: Neon database", bg: "#e4f5e9" },
+  { id: "D", name: "Movie List", sub: "App: TMDB", bg: "#e2f3fb" },
+  { id: "E", name: "Streaming Check", sub: "App: RapidAPI", bg: "#efe9fa" },
+  { id: "F", name: "AI Assistant", sub: "App: Google Gemini", bg: "#fce7f1" },
+  { id: "G", name: "Telegram", sub: "App: Telegram bot", bg: "#fff0df" },
+];
 
-// boxes: id, lane, col (1-6), step number, app label, colour key, text
+// boxes: lane, stage column (1-6), step number, label (the application doing the step), text
 const BOXES = [
-  { id: "a1", lane: "A", col: 1, step: 1, tag: "YOU", c: "you", text: "You open the website and sign in with your PIN, or press <b>Refresh Data</b> / <b>Send This Week's List Now</b>" },
-  { id: "b1", lane: "B", col: 1, step: 2, tag: "VERCEL TIMER", c: "app", text: "Two alarms wake the app up: <b>every day 12 PM</b> (fetch news) and <b>every Friday 6 PM</b> (send digest), India time" },
-  { id: "d2", lane: "D", col: 2, step: 3, tag: "TMDB", c: "tmdb", text: "Sends this week's releases in India: <b>title, date, genres, language, poster, runtime</b>" },
-  { id: "e2", lane: "E", col: 2, step: 4, tag: "RAPIDAPI", c: "rapid", text: "Tells us <b>which streaming app</b> (Netflix, Prime Video, JioHotstar...) really has each title in India" },
-  { id: "a2", lane: "A", col: 2, step: 5, tag: "YOUR PROFILE", c: "you", text: "You choose <b>genres, languages, platforms and types</b> once. You tap Like / Dislike on titles" },
-  { id: "a3", lane: "A", col: 3, step: 6, tag: "PROFILE PAGE", c: "you", text: "Your choices are <b>saved in the memory</b> and stay until <b>you</b> change them. Every page follows them" },
-  { id: "b3", lane: "B", col: 3, step: 7, tag: "THE APP", c: "app", text: "<b>Honest rules:</b> the week runs Fri 6:01 PM to Fri 6:00 PM. No real date = not counted. A platform is shown only when confirmed" },
-  { id: "f3", lane: "F", col: 3, step: 8, tag: "GEMINI", c: "gemini", text: "<b>AI's instructions:</b> judge only from your taste and the title facts. Never invent dates, platforms or stories" },
-  { id: "b4", lane: "B", col: 4, step: 9, tag: "THE APP", c: "app", text: "Collects, <b>removes duplicates</b>, keeps only titles that match your filters, groups episodes, builds <b>two lists</b>" },
-  { id: "c4", lane: "C", col: 4, step: 10, tag: "NEON DATABASE", c: "neon", text: "<b>Remembers</b> every release, your filters, Likes, watchlist and sent messages" },
-  { id: "g4", lane: "G", col: 4, step: 12, tag: "TELEGRAM BOT", c: "tg", text: "The app hands the digest to the bot, which <b>delivers it</b> to your chat" },
-  { id: "f5", lane: "F", col: 5, step: 11, tag: "GOOGLE GEMINI", c: "gemini", text: "Writes a short <b>Watch / Skip</b> opinion for each title, based on your taste (shown on the website)" },
-  { id: "b6", lane: "B", col: 6, step: 13, tag: "THE WEBSITE", c: "app", text: "<b>Carousel</b> of top-rated new releases, <b>New Releases, Movies, Series, Episodes, Watchlist, Weekly Digest, Profile</b>" },
-  { id: "g6", lane: "G", col: 6, step: 14, tag: "TELEGRAM", c: "tg", text: "<b>Friday digest:</b> 2 lists, each title with platform, genres, runtime or episodes and a 2-line story" },
-  { id: "a6", lane: "A", col: 6, step: 15, tag: "YOU", c: "you", text: "You read the digest on your phone. Likes and Dislikes you give <b>teach the app</b> your taste" },
+  { id: "a1", lane: "A", col: 1, step: 1, tag: "YOU", text: "You open the website and sign in with your PIN, or press <b>Refresh Data</b> / <b>Send This Week's List Now</b>" },
+  { id: "b1", lane: "B", col: 1, step: 2, tag: "VERCEL TIMER", text: "Two alarms wake the app up: <b>every day 12 PM</b> (fetch news) and <b>every Friday 6 PM</b> (send digest), India time" },
+  { id: "d2", lane: "D", col: 2, step: 3, tag: "TMDB", text: "Sends this week's releases in India: <b>title, date, genres, language, poster, runtime</b>" },
+  { id: "e2", lane: "E", col: 2, step: 4, tag: "RAPIDAPI", text: "Tells us <b>which streaming app</b> (Netflix, Prime Video, JioHotstar...) really has each title in India" },
+  { id: "a2", lane: "A", col: 2, step: 5, tag: "YOUR PROFILE", text: "You choose <b>genres, languages, platforms and types</b> once, and tap Like / Dislike on titles" },
+  { id: "a3", lane: "A", col: 3, step: 6, tag: "PROFILE PAGE", text: "Your choices are <b>saved in the memory</b> and stay until <b>you</b> change them. Every page follows them" },
+  { id: "b3", lane: "B", col: 3, step: 7, tag: "THE APP", text: "<b>Honest rules:</b> the week runs Fri 6:01 PM to Fri 6:00 PM. No real date = not counted. A platform shows only when confirmed" },
+  { id: "f3", lane: "F", col: 3, step: 8, tag: "GOOGLE GEMINI", text: "<b>AI's instructions:</b> judge only from your taste and the title facts. Never invent dates, platforms or stories" },
+  { id: "b4", lane: "B", col: 4, step: 9, tag: "THE APP ON VERCEL", text: "Collects, <b>removes duplicates</b>, keeps only titles matching your filters, groups episodes, builds <b>two lists</b>" },
+  { id: "c4", lane: "C", col: 4, step: 10, tag: "NEON DATABASE", text: "<b>Remembers</b> every release, your filters, Likes, watchlist and sent messages" },
+  { id: "g4", lane: "G", col: 4, step: 12, tag: "TELEGRAM BOT", text: "The app hands the digest to the bot, which <b>delivers it</b> to your chat" },
+  { id: "f5", lane: "F", col: 5, step: 11, tag: "GOOGLE GEMINI", text: "Writes a short <b>Watch / Skip</b> opinion for each title, based on your taste (shown on the website)" },
+  { id: "b6", lane: "B", col: 6, step: 13, tag: "THE WEBSITE", text: "<b>Carousel</b> of top-rated new releases, <b>New Releases, Movies, Series, Episodes, Watchlist, Digest, Profile</b>" },
+  { id: "g6", lane: "G", col: 6, step: 14, tag: "TELEGRAM", text: "<b>Friday digest:</b> 2 lists, each title with platform, genres, runtime or episodes and a 2-line story" },
+  { id: "a6", lane: "A", col: 6, step: 15, tag: "YOU", text: "You read the digest on your phone. Likes and Dislikes you give <b>teach the app</b> your taste" },
 ];
 
 // dashed arrows. mode: H straight across | V straight up/down | RT right, turn in the gutter before the target, enter its left
-// | RR right, turn in the gutter after the source column, enter the target's right side | RB go round the right edge of the page area
+// | RR right, turn in the gutter after the source column, enter the target's right side | RB go round the right edge
 const EDGES = [
   { f: "a1", t: "b1", m: "V" },
-  { f: "b1", t: "d2", m: "RT", ch: 4 },
-  { f: "d2", t: "b4", m: "RT", ch: 4 },
-  { f: "e2", t: "b4", m: "RT", ch: 9 },
+  { f: "b1", t: "d2", m: "RT", ch: 3 },
+  { f: "d2", t: "b4", m: "RT", ch: 3 },
+  { f: "e2", t: "b4", m: "RT", ch: 7 },
   { f: "a2", t: "a3", m: "H" },
-  { f: "a3", t: "b4", m: "RT", ch: 14 },
+  { f: "a3", t: "b4", m: "RT", ch: 11 },
   { f: "b3", t: "b4", m: "H" },
   { f: "b4", t: "c4", m: "V" },
   { f: "f3", t: "f5", m: "H" },
-  { f: "b4", t: "f5", m: "RT", ch: 4 },
-  { f: "b4", t: "g4", m: "RR", ch: 4, dy: -28 },
+  { f: "b4", t: "f5", m: "RT", ch: 3 },
+  { f: "b4", t: "g4", m: "RR", ch: 3, dy: -30 },
   { f: "b4", t: "b6", m: "H" },
-  { f: "f5", t: "b6", m: "RT", ch: 6 },
+  { f: "f5", t: "b6", m: "RT", ch: 3 },
   { f: "g4", t: "g6", m: "H" },
   { f: "g6", t: "a6", m: "RB" },
   { f: "b6", t: "a6", m: "V" },
 ];
 
 const APPS = [
-  ["TMDB", "A huge online movie and TV library. Tells us what released, when, and the artwork"],
-  ["RapidAPI", "A service that tells us which streaming apps carry a title in India"],
-  ["Google Gemini", "The AI that writes the short Watch / Skip opinions (it never supplies facts)"],
-  ["Neon", "The database: the app's long-term memory for releases, filters and Likes"],
-  ["Vercel", "Runs the website live on the internet and wakes the app up on schedule"],
-  ["GitHub", "Keeps all the program code safe and versioned"],
+  ["TMDB", "Movie and TV library: what released, when, and the artwork"],
+  ["RapidAPI", "Tells us which streaming apps carry a title in India"],
+  ["Google Gemini", "The AI that writes the short Watch / Skip opinions (never facts)"],
+  ["Neon", "Database: the app's long-term memory for releases, filters and Likes"],
+  ["Vercel", "Runs the website live on the internet and wakes the app on schedule"],
+  ["GitHub", "Keeps the program code safe and versioned"],
   ["Telegram", "The chat app that receives your Friday digest"],
   ["Next.js", "The toolkit the website itself is built with"],
 ];
 
-const LAYOUT = { W: 1700, labelW: 172, colW: 253, laneH: 120, top: 150, boxH: 104, boxW: 214 };
-const laneY = (id) => LAYOUT.top + LANES.findIndex((l) => l.id === id) * LAYOUT.laneH;
-const colX = (c) => LAYOUT.labelW + (c - 1) * LAYOUT.colW;
-const lanesBottom = LAYOUT.top + LANES.length * LAYOUT.laneH;
+const G = { margin: 24, whoW: 190, colW: 244, laneH: 124, headH: 48, gap: 8, boxW: 208, boxH: 108 };
+const diagramW = G.whoW + 6 * G.colW; // 1654
+const pageW = diagramW + 2 * G.margin; // 1702
+const lanesTop = G.headH + G.gap;
+const diagramH = lanesTop + LANES.length * G.laneH;
+const laneY = (id) => lanesTop + LANES.findIndex((l) => l.id === id) * G.laneH;
+const colX = (c) => G.whoW + (c - 1) * G.colW;
 
-function html(withLogin) {
+function html(withLogin, pageH) {
+  const head = `<div class="headbar"><div class="hc who">Who</div>${STAGES.map((s) => `<div class="hc">${s.name}</div>`).join("")}</div>`;
   const lanes = LANES.map(
-    (l, i) => `
-    <div class="lane ${i % 2 ? "alt" : ""}" style="top:${laneY(l.id)}px;height:${LAYOUT.laneH}px"></div>
-    <div class="lanelabel" style="top:${laneY(l.id)}px;height:${LAYOUT.laneH}px;border-left:6px solid ${l.color}">
-      <div class="ln">${l.name}</div><div class="la" style="color:${l.color}">${l.app}</div>
-    </div>`,
+    (l) => `<div class="lane" style="top:${laneY(l.id)}px;height:${G.laneH}px;background:${l.bg}"></div>
+    <div class="whoblock" style="top:${laneY(l.id) + 3}px;height:${G.laneH - 6}px"><div class="wn">${l.name}</div><div class="ws">${l.sub}</div></div>`,
   ).join("");
-  const heads = COLS.map((c, i) => `<div class="colhead" style="left:${colX(i + 1)}px;width:${LAYOUT.colW}px">${c}</div>`).join("");
-  const caps = CAPTIONS.map((c, i) => `<div class="cap" style="left:${colX(i + 1)}px;width:${LAYOUT.colW}px">${c}</div>`).join("");
+  const seps = Array.from({ length: 5 }, (_, i) => `<div class="sep" style="left:${colX(i + 2)}px;top:${lanesTop}px;height:${LANES.length * G.laneH}px"></div>`).join("");
   const boxes = BOXES.map((b) => {
-    const x = colX(b.col) + (LAYOUT.colW - LAYOUT.boxW) / 2;
-    const y = laneY(b.lane) + (LAYOUT.laneH - LAYOUT.boxH) / 2;
-    return `<div class="box" id="${b.id}" style="left:${x}px;top:${y}px;width:${LAYOUT.boxW}px;height:${LAYOUT.boxH}px;border-color:${COLORS[b.c]}">
-      <div class="tag" style="background:${COLORS[b.c]}"><span class="st">${b.step}</span>${b.tag}</div><div class="bt">${b.text}</div></div>`;
+    const s = STAGES[b.col - 1];
+    const x = colX(b.col) + (G.colW - G.boxW) / 2;
+    const y = laneY(b.lane) + (G.laneH - G.boxH) / 2;
+    return `<div class="box" id="${b.id}" style="left:${x}px;top:${y}px;width:${G.boxW}px;height:${G.boxH}px;background:${s.fill};border-color:${s.line}">
+      <div class="tag" style="color:${s.ink}"><span class="st" style="background:${s.line}">${b.step}</span>${b.tag}</div><div class="bt">${b.text}</div></div>`;
   }).join("");
-  const apps = APPS.map(([n, d]) => `<tr><td class="an">${n}</td><td>${d}</td></tr>`).join("");
-  const side = withLogin
-    ? `<div class="login"><div class="lt">Logins for the OTT Release Radar website (keep this page private)</div>
-        <table>
-          <tr><td class="k">Website</td><td>${SITE}/login</td></tr>
-          <tr><td class="k">Sign in</td><td>PIN only (there is no username)</td></tr>
-          <tr><td class="k">PIN</td><td>${PIN}</td></tr>
-          <tr><td class="k">GitHub</td><td>github.com/HariD1122/ott-release-radar</td></tr>
-          <tr><td class="k">You can</td><td>browse and search every release, set filters, Like / Save titles, press <b>Send This Week's List Now</b>, change the PIN</td></tr>
-        </table></div>`
-    : `<div class="login"><div class="lt">How to try it</div>
-        <table>
-          <tr><td class="k">1</td><td>Open the website and sign in with the PIN</td></tr>
-          <tr><td class="k">2</td><td>Open <b>Profile</b> and pick your genres, languages and platforms</td></tr>
-          <tr><td class="k">3</td><td>Open <b>New Releases</b> to see this week's matching titles</td></tr>
-          <tr><td class="k">4</td><td>Press <b>Send This Week's List Now</b>: the digest arrives in Telegram</td></tr>
-        </table></div>`;
-  const H = lanesBottom + 390;
+  const legend = STAGES.map((s) => `<div class="lg"><span class="sw" style="background:${s.fill};border-color:${s.line}"></span>${s.legend}</div>`).join("");
+  const apps = APPS.map(([n, d]) => `<div class="r"><span class="k">${n}</span><span>${d}</span></div>`).join("");
+  const right = withLogin
+    ? `<div class="panel red"><h3>Access details (keep this page private)</h3>
+        <div class="r"><span class="k">Website</span><span>${SITE}/login</span></div>
+        <div class="r"><span class="k">Sign in</span><span>PIN only (there is no username)</span></div>
+        <div class="r"><span class="k">PIN</span><span>${PIN}</span></div>
+        <div class="r"><span class="k">GitHub</span><span>github.com/HariD1122/ott-release-radar</span></div>
+        <div class="r"><span class="k">You can</span><span>browse and search every release, set your filters, Like and save titles, press <b>Send This Week's List Now</b>, change the PIN</span></div>
+      </div>`
+    : `<div class="panel red"><h3>How to try it</h3>
+        <div class="r"><span class="k">Step 1</span><span>Open the website and sign in with the PIN</span></div>
+        <div class="r"><span class="k">Step 2</span><span>Open <b>Profile</b> and pick your genres, languages and platforms</span></div>
+        <div class="r"><span class="k">Step 3</span><span>Open <b>New Releases</b> to see this week's matching titles</span></div>
+        <div class="r"><span class="k">Step 4</span><span>Press <b>Send This Week's List Now</b>: the digest arrives in Telegram</span></div>
+      </div>`;
   return `<!doctype html><html><head><meta charset="utf-8"><title>OTT Release Radar - Components Map</title>
 <style>
-@page { size: ${LAYOUT.W}px ${H}px; margin: 0; }
+@page { size: ${pageW}px ${pageH}px; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { width: ${LAYOUT.W}px; height: ${H}px; position: relative; font-family: "Segoe UI", Arial, sans-serif; color: #0b1220; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-h1 { position: absolute; left: 24px; top: 18px; margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
-.sub { position: absolute; left: 24px; top: 62px; width: 1650px; font-size: 15px; color: #334155; line-height: 1.4; }
-.colhead { position: absolute; top: 112px; height: 28px; text-align: center; font-weight: 700; font-size: 14px; color: #fff; background: #0b1b30; border-radius: 6px; line-height: 28px; margin: 0 4px; }
-.lane { position: absolute; left: 0; width: ${LAYOUT.W}px; background: #f7f9fc; border-top: 1px solid #e2e8f0; }
-.lane.alt { background: #eef3f9; }
-.lanelabel { position: absolute; left: 10px; width: ${LAYOUT.labelW - 16}px; display: flex; flex-direction: column; justify-content: center; padding-left: 10px; }
-.ln { font-weight: 800; font-size: 16px; } .la { font-size: 11.5px; font-weight: 700; margin-top: 3px; }
-.box { position: absolute; background: #fff; border: 2px solid; border-radius: 10px; padding: 0; box-shadow: 0 2px 6px rgba(15,23,42,.12); overflow: hidden; }
-.tag { color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .6px; padding: 3px 8px 3px 4px; display: flex; align-items: center; gap: 6px; }
-.st { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: #fff; color: #0b1220; font-size: 10.5px; font-weight: 800; }
-.bt { font-size: 12.4px; line-height: 1.3; padding: 6px 9px; color: #1e293b; }
-.cap { position: absolute; top: ${lanesBottom + 8}px; text-align: center; font-size: 12.5px; font-weight: 700; color: #334155; border-top: 3px solid #0b63c5; padding-top: 4px; margin: 0 4px; }
+body { width: ${pageW}px; font-family: "Segoe UI", "DejaVu Sans", Arial, sans-serif; color: #14274e; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 18px ${G.margin}px 22px; }
+h1 { margin: 0; text-align: center; font-size: 31px; font-weight: 800; color: #14274e; letter-spacing: -.3px; }
+.sub { text-align: center; font-size: 15px; color: #5b6784; margin: 6px 0 16px; }
+.diagram { position: relative; width: ${diagramW}px; height: ${diagramH}px; }
+.headbar { position: absolute; left: 0; top: 0; width: ${diagramW}px; height: ${G.headH}px; background: #14274e; border-radius: 12px; display: flex; }
+.hc { width: ${G.colW}px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; }
+.hc.who { width: ${G.whoW}px; }
+.lane { position: absolute; left: 0; width: ${diagramW}px; }
+.sep { position: absolute; width: 2px; background: #fff; }
+.whoblock { position: absolute; left: 0; width: ${G.whoW - 8}px; background: #14274e; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; }
+.wn { font-weight: 700; font-size: 19px; } .ws { font-size: 12.5px; color: #c7d0e6; margin-top: 4px; }
+.box { position: absolute; border: 2px solid; border-radius: 10px; padding: 8px 10px 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.tag { display: flex; align-items: center; gap: 6px; font-size: 10.8px; font-weight: 800; letter-spacing: .4px; margin-bottom: 4px; }
+.st { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: 0; }
+.bt { font-size: 12.6px; line-height: 1.3; color: #14274e; }
 svg { position: absolute; left: 0; top: 0; pointer-events: none; }
-.apps { position: absolute; left: 24px; top: ${lanesBottom + 50}px; width: 1010px; }
-.apps .t, .login .lt { font-weight: 800; font-size: 15px; background: #0b1b30; color: #fff; padding: 6px 10px; border-radius: 6px 6px 0 0; }
-.apps table, .login table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.apps td, .login td { padding: 5px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-.an { width: 130px; font-weight: 700; } .k { width: 100px; font-weight: 700; color: #0b63c5; }
-.login { position: absolute; left: 1060px; top: ${lanesBottom + 50}px; width: 616px; border: 1px solid #cbd5e1; border-radius: 6px; }
-.note { position: absolute; left: 24px; top: ${lanesBottom + 330}px; width: 1650px; font-size: 12.5px; color: #334155; line-height: 1.4; }
+.legend { display: flex; justify-content: space-between; margin: 16px 6px 18px; font-size: 14px; color: #14274e; }
+.lg { display: flex; align-items: center; gap: 8px; }
+.sw { display: inline-block; width: 26px; height: 18px; border: 2px solid; border-radius: 5px; }
+.panels { display: flex; gap: 22px; align-items: stretch; }
+.panel { flex: 1; border: 2px solid; border-radius: 12px; padding: 14px 22px 14px; background: #fff; }
+.panel.blue { border-color: #3b82f6; background: #f7faff; } .panel.red { border-color: #ef4444; background: #fffafa; }
+.panel h3 { margin: 0 0 8px; font-size: 18px; font-weight: 800; color: #14274e; }
+.r { display: flex; gap: 14px; padding: 3.5px 0; font-size: 13.5px; line-height: 1.35; }
+.k { flex: 0 0 125px; font-weight: 800; }
+.note { margin: 14px 6px 0; font-size: 12.5px; color: #5b6784; line-height: 1.45; }
 </style></head><body>
-<h1>OTT Release Radar - From "What came out this week?" to a Friday Telegram Digest - Components Map</h1>
-<div class="sub">Follow the numbers and the dashed arrows: a timer wakes the app, it fetches this week's releases, checks where they stream, keeps only what matches <b>your</b> filters, asks the AI for opinions, and shows the result on the website and in Telegram. The small label in each box is the application doing that step.</div>
-${heads}${lanes}${boxes}
-<svg id="arrows" width="${LAYOUT.W}" height="${H}"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b63c5"/></marker></defs></svg>
-${caps}
-<div class="apps"><div class="t">Applications used</div><table>${apps}</table></div>
-${side}
-<div class="note"><b>Good to know:</b> Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title is counted in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
+<h1>OTT Release Radar · From "What came out this week?" to a Friday Telegram Digest — Components Map</h1>
+<div class="sub">How to read this page: start at box 1 and follow the numbers and the dashed arrows. A timer fetches this week's new releases, a second service confirms where each title streams, the app keeps only what matches your profile, the AI adds opinions, and the result reaches you on the website and in Telegram. The coloured tag on each box names the tool doing that step.</div>
+<div class="diagram" id="diagram">
+${lanes}${seps}${head}${boxes}
+<svg id="arrows" width="${diagramW}" height="${diagramH}"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14274e"/></marker></defs></svg>
+</div>
+<div class="legend">${legend}</div>
+<div class="panels"><div class="panel blue"><h3>Tools behind the app</h3>${apps}</div>${right}</div>
+<div class="note">Good to know: Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title counts in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
 <script>
 const EDGES = ${JSON.stringify(EDGES)};
-const COLX = (c) => ${LAYOUT.labelW} + (c - 1) * ${LAYOUT.colW};
-const colOf = (r) => Math.floor((r.l - ${LAYOUT.labelW}) / ${LAYOUT.colW}) + 1;
+const COLX = (c) => ${G.whoW} + (c - 1) * ${G.colW};
+const colOf = (r) => Math.floor((r.l - ${G.whoW}) / ${G.colW}) + 1;
 const svg = document.getElementById("arrows");
-const R = (id) => { const e = document.getElementById(id).getBoundingClientRect(); return { l: e.left, r: e.right, t: e.top, b: e.bottom, cx: (e.left + e.right) / 2, cy: (e.top + e.bottom) / 2 }; };
+const origin = document.getElementById("diagram").getBoundingClientRect();
+const R = (id) => { const e = document.getElementById(id).getBoundingClientRect(); const l = e.left - origin.left, r = e.right - origin.left, t = e.top - origin.top, b = e.bottom - origin.top; return { l: l, r: r, t: t, b: b, cx: (l + r) / 2, cy: (t + b) / 2 }; };
 function pts(list) { return list.map(function (p, i) { return (i ? "L" : "M") + p[0] + "," + p[1]; }).join(" "); }
 function route(e) {
   const a = R(e.f), b = R(e.t);
@@ -171,29 +180,37 @@ function route(e) {
     case "V": return b.t > a.b ? pts([[a.cx, a.b], [b.cx, b.t - 2]]) : pts([[a.cx, a.t], [b.cx, b.b + 2]]);
     case "RT": { const x = COLX(colOf(b)) + e.ch; return pts([[a.r, a.cy], [x, a.cy], [x, b.cy], [b.l - 2, b.cy]]); }
     case "RR": { const x = COLX(colOf(b) + 1) + e.ch; const y = b.cy + (e.dy || 0); return pts([[a.r, a.cy], [x, a.cy], [x, y], [b.r + 2, y]]); }
-    case "RB": { const x = b.r + 14; return pts([[a.r, a.cy], [x, a.cy], [x, b.cy], [b.r + 2, b.cy]]); }
+    case "RB": { const x = b.r + 12; return pts([[a.r, a.cy], [x, a.cy], [x, b.cy], [b.r + 2, b.cy]]); }
   }
 }
 for (const e of EDGES) {
   const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
   p.setAttribute("d", route(e));
-  p.setAttribute("fill", "none"); p.setAttribute("stroke", "#0b63c5"); p.setAttribute("stroke-width", "2");
-  p.setAttribute("stroke-dasharray", "7 5"); p.setAttribute("marker-end", "url(#ah)"); p.setAttribute("opacity", ".9");
+  p.setAttribute("fill", "none"); p.setAttribute("stroke", "#14274e"); p.setAttribute("stroke-width", "2");
+  p.setAttribute("stroke-dasharray", "7 5"); p.setAttribute("marker-end", "url(#ah)");
   svg.appendChild(p);
 }
+document.documentElement.setAttribute("data-h", String(Math.ceil(document.body.getBoundingClientRect().height)));
 </script></body></html>`;
 }
+
+const base = ["--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars", "--virtual-time-budget=4000"];
 
 function render(name, withLogin, outDir) {
   mkdirSync(outDir, { recursive: true });
   const htmlPath = join(outDir, name + ".html");
-  writeFileSync(htmlPath, html(withLogin), "utf8");
+  // pass 1: measure the real content height so the page is exactly as tall as its content (no clipping, no blank tail)
+  writeFileSync(htmlPath, html(withLogin, 1500), "utf8");
   const url = pathToFileURL(htmlPath).href;
-  const base = ["--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars", "--virtual-time-budget=4000"];
+  const dom = execFileSync(CHROME, [...base, "--dump-dom", url], { maxBuffer: 64 * 1024 * 1024 }).toString();
+  const m = dom.match(/data-h="(\d+)"/);
+  if (!m) throw new Error("could not measure page height");
+  const pageH = Number(m[1]);
+  // pass 2: final render at the measured height
+  writeFileSync(htmlPath, html(withLogin, pageH), "utf8");
   execFileSync(CHROME, [...base, "--no-pdf-header-footer", `--print-to-pdf=${join(outDir, name + ".pdf")}`, url], { stdio: "ignore" });
-  const H = lanesBottom + 390;
-  execFileSync(CHROME, [...base, `--window-size=${LAYOUT.W},${H}`, `--screenshot=${join(outDir, name + ".png")}`, url], { stdio: "ignore" });
-  console.log("built", join(outDir, name + ".pdf"));
+  execFileSync(CHROME, [...base, `--window-size=${pageW},${pageH}`, `--screenshot=${join(outDir, name + ".png")}`, url], { stdio: "ignore" });
+  console.log("built", join(outDir, name + ".pdf"), `(${pageW} x ${pageH})`);
 }
 
 render("Components-Map", false, docs);
