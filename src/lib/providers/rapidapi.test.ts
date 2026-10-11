@@ -22,6 +22,12 @@ describe("indiaAvailability", () => {
   });
   it("reports rate limiting distinctly", async () => {
     mock({ message: "limit" }, 429);
-    await expect(indiaAvailability("tt1")).rejects.toThrow(/rate limit/i);
+    await expect(indiaAvailability("tt1", 0)).rejects.toThrow(/rate limit/i);
+  });
+  it("retries once after a per-second 429 and then succeeds", async () => {
+    let n = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => (n++ === 0 ? new Response("{}", { status: 429 }) : new Response(JSON.stringify({ streamingAvailability: { country: { IN: [{ platform: "netflix" }] } } }), { status: 200 }))));
+    expect((await indiaAvailability("tt1", 0)).platforms).toEqual([{ platform: "netflix" }]);
+    expect(n).toBe(2);
   });
 });

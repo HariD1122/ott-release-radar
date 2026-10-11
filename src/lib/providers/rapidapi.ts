@@ -24,14 +24,21 @@ export class RapidRateLimited extends Error {
   }
 }
 
-export async function indiaAvailability(imdbId: string): Promise<RapidAvailability> {
+export async function indiaAvailability(imdbId: string, retryDelayMs = 2500, retried = false): Promise<RapidAvailability> {
   const host = process.env.RAPIDAPI_HOST || "ott-details.p.rapidapi.com";
   const res = await fetch(`https://${host}/gettitleDetails?imdbid=${encodeURIComponent(imdbId)}`, {
     headers: { "x-rapidapi-key": requireEnv("RAPIDAPI_KEY"), "x-rapidapi-host": host },
     signal: AbortSignal.timeout(15_000),
   });
   const quota = Number(res.headers.get("x-ratelimit-requests-remaining"));
-  if (res.status === 429) throw new RapidRateLimited();
+  if (res.status === 429) {
+    // The plan also limits requests per second: wait once and retry before treating it as a quota problem.
+    if (!retried) {
+      await new Promise((r) => setTimeout(r, retryDelayMs));
+      return indiaAvailability(imdbId, retryDelayMs, true);
+    }
+    throw new RapidRateLimited();
+  }
   if (!res.ok) throw new Error(`RapidAPI ${res.status}`);
   const parsed = Availability.safeParse(await res.json());
   if (!parsed.success) throw new Error("RapidAPI response did not match the expected shape");
