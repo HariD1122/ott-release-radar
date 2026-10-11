@@ -30,7 +30,7 @@ export default async function TitlePage({ params }: { params: Promise<{ id: stri
     <article>
       {r.backdrop_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={r.backdrop_url} alt="" className="mb-5 h-48 w-full rounded-2xl object-cover opacity-60 md:h-64" />
+        <img src={r.backdrop_url} alt="" className="mb-6 h-48 w-full rounded-xl border border-line object-cover object-top shadow-sm md:h-72" />
       )}
       <div className="grid gap-6 md:grid-cols-[210px_1fr]">
         <TitleCard release={r} rec={r.rec_decision && r.rec_explanation ? { decision: r.rec_decision, reason: r.rec_explanation } : null} />

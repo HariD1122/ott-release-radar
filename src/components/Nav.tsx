@@ -25,7 +25,7 @@ export default function Nav({ name }: { name: string }) {
     router.refresh();
   }
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-line bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
         <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
           <Radar className="text-accent" size={20} aria-hidden /> <span className="hidden sm:inline">OTT Release Radar</span>
@@ -38,7 +38,7 @@ export default function Nav({ name }: { name: string }) {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm ${active ? "bg-surface2 text-accent" : "text-muted hover:text-ink"}`}
+                className={`flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm ${active ? "bg-accent/10 font-semibold text-accent" : "text-muted hover:bg-surface2 hover:text-ink"}`}
               >
                 <Icon size={15} aria-hidden /> {label}
               </Link>

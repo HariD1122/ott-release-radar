@@ -42,7 +42,7 @@ export default function DigestView({ digest }: { digest: Digest }) {
       {digest.aiError && <Notice tone="warn">{digest.aiError}. Showing the digest without AI WATCH/SKIP opinions.</Notice>}
       <div className="grid gap-8 lg:grid-cols-2">
         <section aria-label="Personalized for You">
-          <h2 className="text-lg font-bold">❤️ Personalized for You <span className="chip">{p.entries.length}</span></h2>
+          <h2 className="text-lg font-bold">Personalized for You <span className="chip">{p.entries.length}</span></h2>
           <p className="mb-3 mt-1 text-xs text-muted">
             {p.feedbackActive
               ? `Ranked from your preferences and ${p.feedbackCount} Like/Dislike reactions.`
@@ -51,7 +51,7 @@ export default function DigestView({ digest }: { digest: Digest }) {
           <Entries entries={p.entries} digest={digest} showReasons empty="No personalized matches are available for this weekly window." />
         </section>
         <section aria-label="Recommended for Your Filters">
-          <h2 className="text-lg font-bold">🎬 Recommended for Your Filters <span className="chip">{digest.filters.entries.length}</span></h2>
+          <h2 className="text-lg font-bold">Recommended for Your Filters <span className="chip">{digest.filters.entries.length}</span></h2>
           <p className="mb-3 mt-1 text-xs text-muted">Matches your selected genres, languages, platforms and types only. Newest first; Likes/Dislikes never affect this list.</p>
           <Entries entries={digest.filters.entries} digest={digest} showReasons={false} empty="No titles match the selected filters for this window." />
         </section>

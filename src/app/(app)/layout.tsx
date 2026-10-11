@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import Nav from "@/components/Nav";
 import { requireUser } from "@/lib/auth/auth";
 
@@ -8,7 +9,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <Nav name={user.displayName} />
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+      <Footer />
     </>
   );
 }

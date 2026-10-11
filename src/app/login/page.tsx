@@ -28,8 +28,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-line bg-surface p-7 shadow-2xl">
+    <main className="flex min-h-screen items-center justify-center bg-surface2 p-4">
+      <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-line bg-surface p-7 shadow-lg">
         <div className="mb-6 flex items-center gap-2">
           <Radar className="text-accent" aria-hidden />
           <h1 className="text-xl font-extrabold tracking-tight">OTT Release Radar</h1>
