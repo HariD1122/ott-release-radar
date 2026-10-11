@@ -50,7 +50,8 @@ export async function deliverDigest(trigger: Trigger, userId: string, now = new 
   }
 
   try {
-    const digest = await buildDigest(userId, { now, window, ai: "generate" });
+    // Telegram messages carry no WATCH/SKIP opinion, so no Gemini call is needed for delivery.
+    const digest = await buildDigest(userId, { now, window, ai: false });
     const texts = renderTelegram(digest);
     const res = await sendMessages(texts); // success only if Telegram confirmed every part
     const counts = [digest.personalized.entries.length, digest.filters.entries.length, digest.eligibleCount];

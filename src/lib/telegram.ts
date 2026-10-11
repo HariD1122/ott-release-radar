@@ -28,7 +28,6 @@ function entryBlock(i: number, e: DigestEntry, showFeedback: boolean): string {
   const meta = [e.genres.join(", "), e.languages.join(", ")].filter(Boolean).join(" · ");
   if (meta) lines.push(`🎭 ${esc(meta)}`);
   lines.push(e.synopsis ? `📝 ${esc(e.synopsis)}` : "📝 Synopsis not available");
-  if (e.rec) lines.push(`${e.rec.decision === "WATCH" ? "✅ WATCH" : "⏭ SKIP"} — ${esc(e.rec.reason)}`);
   if (showFeedback && e.reasons.length) lines.push(`ℹ️ ${esc(e.reasons.join("; "))}`);
   return lines.join("\n");
 }

@@ -112,6 +112,12 @@ describe("digest entry details (runtime, episodes, synopsis)", () => {
     expect(text).toContain("8 episodes");
     expect(text).toContain("2 new episodes");
   });
+  it("Telegram never shows WATCH/SKIP, even when an AI opinion exists", () => {
+    const d = composeDigest([rel("w")], prefs, [], w, now);
+    for (const e of [...d.personalized.entries, ...d.filters.entries]) e.rec = { decision: "WATCH", reason: "Great fit.", matchedPreferences: [], confidence: 0.9, dataLimitations: [] };
+    const text = renderTelegram(d).join(" ");
+    expect(text).not.toMatch(/WATCH|SKIP|Great fit/);
+  });
   it("says so when a synopsis is missing instead of inventing one", () => {
     expect(renderTelegram(composeDigest([rel("n", { synopsis: null })], prefs, [], w, now)).join(" ")).toContain("Synopsis not available");
   });
