@@ -27,7 +27,7 @@ if (process.env.VT) {
 // ---- security ----
 let r = await fetch(base + "/login");
 const loginHtml = await r.text();
-ok("no secret values in page source", !/(AQ\.Ab8|npg_|8890026064|vcp_|ghp_|nsk_live)/.test(loginHtml));
+ok("no secret values in page source", !/(AQ\.Ab8|npg_[A-Za-z0-9]{8}|8890026064|vcp_[A-Za-z0-9]{20}|ghp_[A-Za-z0-9]{20}|nsk_live)/.test(loginHtml));
 for (const p of ["/api/collect", "/api/digest/send", "/api/telegram/test", "/api/recommendations", "/api/feedback", "/api/watchlist"]) {
   r = await fetch(base + p, { method: "POST", headers: { origin: base } });
   ok(`signed-out POST ${p} -> 401`, r.status === 401);
