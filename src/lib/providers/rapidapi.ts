@@ -6,14 +6,11 @@
 import { z } from "zod";
 import { requireEnv } from "../env";
 
+// Only India matters, so only the IN list is validated; a malformed entry for another country must not
+// discard the whole response. Individual malformed IN items are skipped.
+const Item = z.object({ platform: z.string().min(1), url: z.string().nullish() });
 const Availability = z.object({
-  streamingAvailability: z
-    .object({
-      country: z
-        .record(z.string(), z.array(z.object({ platform: z.string(), url: z.string().nullish() })))
-        .optional(),
-    })
-    .optional(),
+  streamingAvailability: z.object({ country: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
 
 export interface RapidAvailability {
@@ -38,8 +35,10 @@ export async function indiaAvailability(imdbId: string): Promise<RapidAvailabili
   if (!res.ok) throw new Error(`RapidAPI ${res.status}`);
   const parsed = Availability.safeParse(await res.json());
   if (!parsed.success) throw new Error("RapidAPI response did not match the expected shape");
+  const inRaw = parsed.data.streamingAvailability?.country?.IN;
+  const inItems = Array.isArray(inRaw) ? inRaw.flatMap((x) => { const p = Item.safeParse(x); return p.success ? [p.data] : []; }) : [];
   return {
-    platforms: parsed.data.streamingAvailability?.country?.IN ?? [],
+    platforms: inItems,
     quotaRemaining: Number.isFinite(quota) ? quota : null,
   };
 }
