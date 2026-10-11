@@ -45,6 +45,7 @@ export default function TitleCard({
       .join(" · ") || null);
   const synopsisText = synopsis ?? shortSynopsis(r.synopsis);
   const image = r.backdrop_url ?? r.poster_url;
+  const whyText = rec?.reason ?? (reasons && reasons.length ? reasons.join(" · ") : null);
   const [feedback, setFeedback] = useState(r.feedback);
   const [inList, setInList] = useState(r.in_watchlist);
   const [busy, setBusy] = useState(false);
@@ -89,8 +90,8 @@ export default function TitleCard({
   }
 
   return (
-    <article className={`card group flex shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface ${wide ? "w-full" : "w-[280px]"}`}>
-      <Link href={`/title/${r.id}`} className="relative block aspect-video overflow-hidden bg-surface2" aria-label={`Open ${r.title}`}>
+    <article className={`card group flex h-[416px] shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface ${wide ? "w-full" : "w-[280px]"}`}>
+      <Link href={`/title/${r.id}`} className="relative block h-[158px] shrink-0 overflow-hidden bg-surface2" aria-label={`Open ${r.title}`}>
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={image} alt={`Artwork for ${r.title}`} loading="lazy" className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]" />
@@ -116,20 +117,24 @@ export default function TitleCard({
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <Link href={`/title/${r.id}`} className="line-clamp-1 text-[15px] font-semibold leading-snug text-ink hover:text-accent">
+        <Link href={`/title/${r.id}`} className="line-clamp-1 h-[22px] shrink-0 text-[15px] font-semibold leading-snug text-ink hover:text-accent">
           {r.title}
         </Link>
-        {detail && <p className="line-clamp-1 text-xs font-medium text-accent">{detail}</p>}
-        <p className="line-clamp-1 text-xs text-muted">
+        <p className="line-clamp-1 h-4 shrink-0 text-xs font-medium text-accent">{detail ?? " "}</p>
+        <p className="line-clamp-1 h-4 shrink-0 text-xs text-muted">
           {dateText(r)} · {r.platforms.length ? r.platforms.join(", ") : "Platform not confirmed"}
         </p>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex h-6 shrink-0 flex-wrap gap-1 overflow-hidden">
           {r.genres.slice(0, 2).map((g) => <span key={g} className="chip">{g}</span>)}
           {r.languages.slice(0, 1).map((g) => <span key={g} className="chip">{g}</span>)}
         </div>
-        <p className="line-clamp-2 min-h-[2.1rem] text-xs leading-snug text-muted">{synopsisText ?? "Synopsis not available"}</p>
-        {rec && <p className="line-clamp-2 text-xs leading-snug text-ink">{rec.reason}</p>}
-        {reasons && reasons.length > 0 && <p className="line-clamp-2 text-[11px] leading-snug text-muted">{reasons.join(" · ")}</p>}
+        <p className="line-clamp-2 h-[34px] shrink-0 text-xs leading-snug text-muted">{synopsisText ?? "Synopsis not available"}</p>
+        <p
+          className={`line-clamp-2 h-[34px] shrink-0 text-xs leading-snug ${whyText ? "text-ink" : "text-muted"}`}
+          title={[rec?.reason, reasons?.join(" · ")].filter(Boolean).join(" — ") || undefined}
+        >
+          {whyText ?? "No recommendation note yet."}
+        </p>
 
         <div className="mt-auto flex items-center gap-1.5 pt-2">
           <button className="btn !px-2.5 !py-1.5" aria-pressed={feedback === "like"} aria-label="Like" disabled={busy} onClick={() => react("like")}>

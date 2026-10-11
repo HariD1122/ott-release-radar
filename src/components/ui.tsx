@@ -24,7 +24,7 @@ export function Grid({ releases, empty }: { releases: ReleaseView[]; empty?: str
   if (!releases.length)
     return <p className="rounded-lg border border-dashed border-line p-6 text-sm text-muted">{empty ?? "No titles match."}</p>;
   return (
-    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(270px,1fr))] items-stretch">
       {releases.map((r) => (
         <TitleCard
           key={r.id}

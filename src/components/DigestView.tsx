@@ -6,7 +6,7 @@ import { Notice } from "./ui";
 function Entries({ entries, digest, empty, showReasons }: { entries: DigestEntry[]; digest: Digest; empty: string; showReasons: boolean }) {
   if (!entries.length) return <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">{empty}</p>;
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
       {entries.map((e, i) => {
         const r = digest.cards[e.releaseId];
         if (!r) return null;
@@ -40,7 +40,7 @@ export default function DigestView({ digest }: { digest: Digest }) {
         <b>{digest.eligibleCount}</b> confirmed releases, <b>{digest.matchCount}</b> match your saved filters (only those are recommended and sent to Telegram). Release dates are calendar dates (TMDB provides no exact time), so each date belongs to exactly one weekly window.
       </Notice>
       {digest.aiError && <Notice tone="warn">{digest.aiError}. Showing the digest without AI WATCH/SKIP opinions.</Notice>}
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-8 xl:grid-cols-2">
         <section aria-label="Personalized for You">
           <h2 className="text-lg font-bold">Personalized for You <span className="chip">{p.entries.length}</span></h2>
           <p className="mb-3 mt-1 text-xs text-muted">
