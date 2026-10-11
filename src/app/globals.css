@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #090b10;
+  --surface: #131722;
+  --surface-2: #1b2030;
+  --line: #262c3f;
+  --text: #e8eaf2;
+  --muted: #9aa3bb;
+  --accent: #f0b429;
+  --accent-ink: #1a1405;
+  --good: #3ecf8e;
+  --bad: #ff6b6b;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+html { color-scheme: dark; }
+
+body {
+  background: radial-gradient(1200px 500px at 70% -10%, #1a2140 0%, transparent 60%), var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.row-scroll { scrollbar-width: thin; scrollbar-color: var(--line) transparent; scroll-snap-type: x proximity; }
+.row-scroll > * { scroll-snap-align: start; }
+
+.input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.9rem;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  border-radius: 10px; padding: 0.55rem 0.95rem; font-weight: 600; font-size: 0.875rem;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+  transition: background .15s, transform .05s;
+}
+.btn:hover:not(:disabled) { background: #232a3f; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-primary:hover:not(:disabled) { background: #ffc94d; }
+.chip {
+  display: inline-block; border-radius: 999px; padding: 0.12rem 0.55rem; font-size: 0.7rem;
+  border: 1px solid var(--line); color: var(--muted); background: rgba(255,255,255,.03);
+}
