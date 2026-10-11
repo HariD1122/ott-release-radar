@@ -22,7 +22,7 @@ r = await fetch(base + "/api/preferences", { method: "POST", headers: H }); ok("
 for (const p of ["/", "/new", "/movies", "/series", "/episodes", "/watchlist", "/digest", "/profile", "/settings"]) {
   r = await fetch(base + p, { headers: { cookie }, redirect: "manual" }); t = await r.text();
   ok(`page ${p}`, r.status === 200 && /Harikrishnan D/.test(t), `status ${r.status}`);
-  if (["/", "/movies", "/series", "/new"].includes(p)) ok(`  ${p} cards show synopsis line`, /Synopsis not available|min-h-[2.1rem]/.test(t));
+  if (["/", "/movies", "/series", "/new"].includes(p)) ok(`  ${p} cards show synopsis line`, /Synopsis not available|min-h-\[2\.1rem\]/.test(t));
 }
 
 const prefs = await (await fetch(base + "/api/preferences", { headers: { cookie } })).json();
