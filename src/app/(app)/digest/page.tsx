@@ -4,22 +4,14 @@ import Filters from "@/components/Filters";
 import { PageTitle } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
 import { distinctValues, getPrefs } from "@/lib/catalogue";
-import { q } from "@/lib/db";
 import { buildDigest } from "@/lib/digest";
-import { formatIst } from "@/lib/time/window";
 
 export const maxDuration = 60;
 
-interface Hist {
-  id: string; trigger_type: string; status: string; window_end: string; personalized_count: number;
-  filter_count: number; total_unique: number; attempt_count: number; error_summary: string | null; started_at: string;
-}
-
 export default async function DigestPage() {
   const user = await requireUser();
-  const [digest, history, options, prefs] = await Promise.all([
+  const [digest, options, prefs] = await Promise.all([
     buildDigest(user.id),
-    q<Hist>("SELECT id, trigger_type, status, window_end, personalized_count, filter_count, total_unique, attempt_count, error_summary, started_at FROM digest_history ORDER BY started_at DESC LIMIT 15"),
     distinctValues(),
     getPrefs(user.id),
   ]);
@@ -37,33 +29,6 @@ export default async function DigestPage() {
       />
       <Filters action="/digest" current={{}} options={options} saved={prefs} showType showText={false} />
       <DigestView digest={digest} />
-      <h2 className="mb-2 mt-10 text-lg font-bold">Telegram delivery history</h2>
-      {history.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">No deliveries yet.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-line">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface text-xs text-muted">
-              <tr>{["When (IST)", "Trigger", "Window end", "Status", "Personalized", "Filters", "Eligible", "Attempts", "Error"].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr>
-            </thead>
-            <tbody>
-              {history.map((h) => (
-                <tr key={h.id} className="border-t border-line">
-                  <td className="px-3 py-2">{formatIst(new Date(h.started_at))}</td>
-                  <td className="px-3 py-2">{h.trigger_type}</td>
-                  <td className="px-3 py-2">{h.trigger_type === "test" ? "—" : formatIst(new Date(h.window_end))}</td>
-                  <td className={`px-3 py-2 font-semibold ${h.status === "sent" ? "text-good" : h.status === "failed" ? "text-bad" : "text-accent"}`}>{h.status}</td>
-                  <td className="px-3 py-2">{h.personalized_count}</td>
-                  <td className="px-3 py-2">{h.filter_count}</td>
-                  <td className="px-3 py-2">{h.total_unique}</td>
-                  <td className="px-3 py-2">{h.attempt_count}</td>
-                  <td className="px-3 py-2 text-xs text-muted">{h.error_summary ?? ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </>
   );
 }

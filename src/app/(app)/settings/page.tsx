@@ -8,12 +8,9 @@ import { formatIst } from "@/lib/time/window";
 
 export default async function Settings() {
   await requireUser();
-  const [bot, chat, deliveries, jobs] = await Promise.all([
+  const [bot, chat, jobs] = await Promise.all([
     process.env.TELEGRAM_BOT_TOKEN ? botInfo() : Promise.resolve(null),
     getChatId(),
-    q<{ id: string; trigger_type: string; status: string; error_summary: string | null; started_at: string }>(
-      "SELECT id, trigger_type, status, error_summary, started_at FROM digest_history ORDER BY started_at DESC LIMIT 8",
-    ),
     q<{ id: string; status: string; started_at: string; records_fetched: number; records_inserted: number; records_updated: number; rapidapi_calls: number; error_details: string | null }>(
       "SELECT id, status, started_at, records_fetched, records_inserted, records_updated, rapidapi_calls, error_details FROM collection_job_history ORDER BY started_at DESC LIMIT 5",
     ),
@@ -57,15 +54,6 @@ export default async function Settings() {
         {jobs.length === 0 ? <p className="text-sm text-muted">No collection has run yet.</p> : (
           <ul className="space-y-1 text-sm text-muted">
             {jobs.map((j) => <li key={j.id}>{formatIst(new Date(j.started_at))} — <b>{j.status}</b>: {j.records_fetched} fetched, {j.records_inserted} new, {j.records_updated} updated, {j.rapidapi_calls} RapidAPI calls{j.error_details ? ` — ${j.error_details.split("\n")[0]}` : ""}</li>)}
-          </ul>
-        )}
-      </section>
-
-      <section className="mb-8">
-        <h2 className="mb-2 text-lg font-bold">Recent Telegram deliveries</h2>
-        {deliveries.length === 0 ? <p className="text-sm text-muted">Nothing sent yet.</p> : (
-          <ul className="space-y-1 text-sm text-muted">
-            {deliveries.map((d) => <li key={d.id}>{formatIst(new Date(d.started_at))} — {d.trigger_type}: <b className={d.status === "sent" ? "text-good" : "text-bad"}>{d.status}</b>{d.error_summary ? ` (${d.error_summary})` : ""}</li>)}
           </ul>
         )}
       </section>

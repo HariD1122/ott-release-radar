@@ -84,7 +84,7 @@ Never commit `.env.local`. Never prefix secrets with `NEXT_PUBLIC_`.
 
 ### Testing the two triggers
 
-* Manual: **Send This Week's List Now** (Home or Weekly Digest). Uses already-collected data. Result and history appear on the Weekly Digest page.
+* Manual: **Send This Week's List Now** (Home or Weekly Digest). Uses already-collected data. The result is shown next to the button. Every send is still recorded in the `digest_history` table (used for duplicate protection); the website no longer displays that history.
 * Automatic (simulate locally):
   ```bash
   curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/digest
@@ -104,7 +104,7 @@ Never commit `.env.local`. Never prefix secrets with `NEXT_PUBLIC_`.
    * `/api/cron/collect` daily at `30 6 * * *` UTC (12:00 PM IST): refreshes data.
    * `/api/cron/digest` at `30 12 * * 5` UTC = **Friday 6:00 PM IST**.
    Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set.
-5. Verify in Vercel → Project → Cron Jobs (use "Run" once), then check **Weekly Digest → delivery history**.
+5. Verify in Vercel → Project → Cron Jobs (use "Run" once), then check your Telegram chat (and the `digest_history` table in Neon).
 
 **Plan limits (verify for your plan):** on Vercel's free Hobby plan cron jobs may run only once per day and can fire anywhere within the scheduled hour, so "exactly 6:00 PM" is not guaranteed there; a Pro plan gives per-minute precision. Because the digest window is computed as "latest closing Friday 6:00 PM IST at or before now", a late run still produces the correct window. Collection can take up to ~2 minutes; the routes set `maxDuration = 300`, which your plan must allow.
 
