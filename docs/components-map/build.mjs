@@ -37,20 +37,20 @@ const LANES = [
 
 // boxes: lane, stage column (1-6), step number, label (the application doing the step), text
 const BOXES = [
-  { id: "a1", lane: "A", col: 1, step: 1, tag: "YOU", text: "You open the website and sign in with your PIN, or press <b>Refresh Data</b> / <b>Send This Week's List Now</b>" },
-  { id: "b1", lane: "B", col: 1, step: 2, tag: "VERCEL TIMER", text: "Two alarms wake the app up: <b>every day 12 PM</b> (fetch news) and <b>every Friday 6 PM</b> (send digest), India time" },
+  { id: "a1", lane: "A", col: 1, step: 1, tag: "YOU", text: "You open the website and sign in with your PIN" },
+  { id: "b1", lane: "B", col: 1, step: 2, tag: "VERCEL TIMER", text: "Two alarms wake the app: <b>daily 12&nbsp;PM</b> (fetch new releases) and <b>Friday 6:00&nbsp;PM</b> (send digest), India time" },
   { id: "d2", lane: "D", col: 2, step: 3, tag: "TMDB", text: "Sends this week's releases in India: <b>title, date, genres, language, poster, runtime</b>" },
   { id: "e2", lane: "E", col: 2, step: 4, tag: "RAPIDAPI", text: "Tells us <b>which streaming app</b> (Netflix, Prime Video, JioHotstar...) really has each title in India" },
   { id: "a2", lane: "A", col: 2, step: 5, tag: "YOUR PROFILE", text: "You choose <b>genres, languages, platforms and types</b> once, and tap Like / Dislike on titles" },
   { id: "a3", lane: "A", col: 3, step: 6, tag: "PROFILE PAGE", text: "Your choices are <b>saved in the memory</b> and stay until <b>you</b> change them. Every page follows them" },
-  { id: "b3", lane: "B", col: 3, step: 7, tag: "THE APP", text: "<b>Honest rules:</b> the week runs Fri 6:01 PM to Fri 6:00 PM. No real date = not counted. A platform shows only when confirmed" },
+  { id: "b3", lane: "B", col: 3, step: 7, tag: "THE APP", text: "<b>Weekly window:</b> last Friday 6:01&nbsp;PM to this Friday 6:00&nbsp;PM (India time). No real date = not counted" },
   { id: "f3", lane: "F", col: 3, step: 8, tag: "GOOGLE GEMINI", text: "<b>AI's instructions:</b> judge only from your taste and the title facts. Never invent dates, platforms or stories" },
   { id: "b4", lane: "B", col: 4, step: 9, tag: "THE APP ON VERCEL", text: "Collects, <b>removes duplicates</b>, keeps only titles matching your filters, groups episodes, builds <b>two lists</b>" },
   { id: "c4", lane: "C", col: 4, step: 10, tag: "NEON DATABASE", text: "<b>Remembers</b> every release, your filters, Likes, watchlist and sent messages" },
-  { id: "g4", lane: "G", col: 4, step: 12, tag: "TELEGRAM BOT", text: "The app hands the digest to the bot, which <b>delivers it</b> to your chat" },
-  { id: "f5", lane: "F", col: 5, step: 11, tag: "GOOGLE GEMINI", text: "Writes a short <b>Watch / Skip</b> opinion for each title, based on your taste (shown on the website)" },
-  { id: "b6", lane: "B", col: 6, step: 13, tag: "THE WEBSITE", text: "<b>Carousel</b> of top-rated new releases, <b>New Releases, Movies, Series, Episodes, Watchlist, Digest, Profile</b>" },
-  { id: "g6", lane: "G", col: 6, step: 14, tag: "TELEGRAM", text: "<b>Friday digest:</b> 2 lists, each title with platform, genres, runtime or episodes and a 2-line story" },
+  { id: "g4", lane: "G", col: 4, step: 11, tag: "TELEGRAM BOT", text: "The app hands the digest to the bot, which <b>delivers it</b> to your chat" },
+  { id: "f5", lane: "F", col: 5, step: 12, tag: "GOOGLE GEMINI", text: "Writes a short <b>Watch / Skip</b> opinion for each title, based on your taste (shown on the website)" },
+  { id: "b6", lane: "B", col: 6, step: 13, tag: "THE WEBSITE", text: "<b>Home carousel</b> of top-rated new titles, plus <b>New Releases, Movies, Series, Episodes, Watchlist, Digest, Profile</b>" },
+  { id: "g6", lane: "G", col: 6, step: 14, tag: "TELEGRAM", text: "<b>Friday digest:</b> 2 lists, each title with platform, genres, runtime or episodes and a 2-line summary" },
   { id: "a6", lane: "A", col: 6, step: 15, tag: "YOU", text: "You read the digest on your phone. Likes and Dislikes you give <b>teach the app</b> your taste" },
 ];
 
@@ -81,7 +81,7 @@ const APPS = [
   ["Google Gemini", "The AI that writes the short Watch / Skip opinions (never facts)"],
   ["Neon", "Database: the app's long-term memory for releases, filters and Likes"],
   ["Vercel", "Runs the website live on the internet and wakes the app on schedule"],
-  ["GitHub", "Keeps the program code safe and versioned"],
+  ["GitHub", "Keeps the program code safe and tracks every change"],
   ["Telegram", "The chat app that receives your Friday digest"],
   ["Next.js", "The toolkit the website itself is built with"],
 ];
@@ -164,7 +164,7 @@ ${lanes}${seps}${head}${boxes}
 </div>
 <div class="legend">${legend}</div>
 <div class="panels"><div class="panel blue"><h3>Tools behind the app</h3>${apps}</div>${right}</div>
-<div class="note">Good to know: Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title counts in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
+<div class="note"><b>Friday time range:</b> each Friday digest covers releases from the <b>previous Friday 6:01 PM up to Friday 6:00 PM, India Standard Time (IST)</b>, both ends included. A platform name is shown only when it is confirmed. Good to know: Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title counts in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
 <script>
 const EDGES = ${JSON.stringify(EDGES)};
 const COLX = (c) => ${G.whoW} + (c - 1) * ${G.colW};
@@ -183,13 +183,53 @@ function route(e) {
     case "RB": { const x = b.r + 12; return pts([[a.r, a.cy], [x, a.cy], [x, b.cy], [b.r + 2, b.cy]]); }
   }
 }
+const drawn = [];
 for (const e of EDGES) {
   const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  p.setAttribute("d", route(e));
+  const d = route(e);
+  drawn.push({ e: e, d: d });
+  p.setAttribute("d", d);
   p.setAttribute("fill", "none"); p.setAttribute("stroke", "#14274e"); p.setAttribute("stroke-width", "2");
   p.setAttribute("stroke-dasharray", "7 5"); p.setAttribute("marker-end", "url(#ah)");
   svg.appendChild(p);
 }
+const issues = [];
+const boxEls = Array.prototype.slice.call(document.querySelectorAll(".box"));
+boxEls.forEach(function (b) {
+  // every child (tag line and body text) must lie fully inside the box border, whichever direction it overflows
+  const br = b.getBoundingClientRect();
+  Array.prototype.slice.call(b.children).forEach(function (c) {
+    const cr = c.getBoundingClientRect();
+    if (cr.top < br.top + 3 || cr.bottom > br.bottom - 3 || cr.left < br.left + 3 || cr.right > br.right - 3) issues.push("text overflows box " + b.id);
+  });
+});
+for (let i = 0; i < boxEls.length; i++) for (let j = i + 1; j < boxEls.length; j++) {
+  const a = boxEls[i].getBoundingClientRect(), b = boxEls[j].getBoundingClientRect();
+  if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) issues.push("boxes overlap " + boxEls[i].id + " / " + boxEls[j].id);
+}
+drawn.forEach(function (x) {
+  const nums = x.d.match(/-?[0-9.]+/g).map(Number); const P = [];
+  for (let k = 0; k < nums.length; k += 2) P.push([nums[k], nums[k + 1]]);
+  for (let k = 0; k + 1 < P.length; k++) {
+    const x1 = Math.min(P[k][0], P[k + 1][0]), x2 = Math.max(P[k][0], P[k + 1][0]), y1 = Math.min(P[k][1], P[k + 1][1]), y2 = Math.max(P[k][1], P[k + 1][1]);
+    boxEls.forEach(function (b) {
+      if (b.id === x.e.f || b.id === x.e.t) return;
+      const r = R(b.id);
+      if (x2 > r.l + 2 && x1 < r.r - 2 && y2 > r.t + 2 && y1 < r.b - 2) issues.push("arrow " + x.e.f + "->" + x.e.t + " crosses box " + b.id);
+    });
+  }
+});
+let prevBottom = 0;
+[".legend", ".panels", ".note"].forEach(function (sel) {
+  const r = document.querySelector(sel).getBoundingClientRect();
+  if (r.top < prevBottom - 0.5) issues.push("section " + sel + " overlaps the one above");
+  prevBottom = r.bottom;
+});
+if (document.getElementById("diagram").getBoundingClientRect().bottom > document.querySelector(".legend").getBoundingClientRect().top) issues.push("diagram overlaps legend");
+Array.prototype.slice.call(document.querySelectorAll(".bt, .tag, .k, .wn, .ws, .hc, .r span, .lg, h3, h1, .sub, .note")).forEach(function (el) {
+  if (el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).display !== "inline") issues.push("text clipped in " + (el.className || el.tagName) + ": " + el.textContent.slice(0, 30));
+});
+document.documentElement.setAttribute("data-qa", JSON.stringify(issues));
 document.documentElement.setAttribute("data-h", String(Math.ceil(document.body.getBoundingClientRect().height)));
 </script></body></html>`;
 }
@@ -206,6 +246,9 @@ function render(name, withLogin, outDir) {
   const m = dom.match(/data-h="(\d+)"/);
   if (!m) throw new Error("could not measure page height");
   const pageH = Number(m[1]);
+  const qa = JSON.parse(dom.match(/data-qa="([^"]*)"/)[1].replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&gt;/g, ">").replace(/&lt;/g, "<"));
+  console.log(name + " layout check:", qa.length ? qa.length + " problem(s)" : "no overlaps, nothing clipped");
+  if (qa.length) { console.log(qa.join(" | ")); process.exitCode = 1; }
   // pass 2: final render at the measured height
   writeFileSync(htmlPath, html(withLogin, pageH), "utf8");
   execFileSync(CHROME, [...base, "--no-pdf-header-footer", `--print-to-pdf=${join(outDir, name + ".pdf")}`, url], { stdio: "ignore" });
