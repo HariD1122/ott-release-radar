@@ -1,4 +1,6 @@
-# OTT Release Radar
+# OTT Release Radar — Version 12
+
+> **Database:** this project uses **Neon PostgreSQL** (not Supabase). Connection is the `DATABASE_URL` environment variable; tables are created by `npm run db:migrate`.
 
 A private, single-owner web app that collects new OTT releases for India, ranks them two independent ways, and sends a categorised weekly digest to Telegram (automatically every Friday 6:00 PM IST, or on demand).
 
@@ -131,3 +133,13 @@ Never commit `.env.local`. Never prefix secrets with `NEXT_PUBLIC_`.
 ## Security notes
 
 Secrets are server-side only; PINs are Argon2id-hashed; sessions are DB-backed (logout revokes); failed logins lock out after 5 attempts for 15 minutes; state-changing routes check same-origin; cron routes require `CRON_SECRET`. Rotate any key that has ever been pasted into chat or a ticket.
+
+## Version 12 changelog (final)
+
+* Permanent multi-select filters (profile) drive New Releases, the dashboard and the Telegram digest.
+* Profile page (display name, genres, OTT platforms, languages, types) with database read-back confirmation.
+* PIN-only sign-in, azure blue theme.
+* Every Telegram entry and web card shows runtime or episode count and a two-line synopsis.
+* Fixed: title detail page crashed (client helper called from a server page); RapidAPI parsing of foreign-country entries; filter bar re-saving on load; old /preferences link now redirects server-side.
+* RapidAPI quota protection (default 5 calls per run, 5 calls kept in reserve, titles with unknown platforms checked first); expired sessions and old login attempts are cleaned automatically.
+* Test tooling: `npm test` (53 tests), `scripts/audit.mts` (database + live service audit), `scripts/deep-test.mjs` and `scripts/prod-test.mjs` (end-to-end checks against a deployed URL).

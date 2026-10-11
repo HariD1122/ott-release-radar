@@ -1,5 +1,6 @@
 import FollowButton from "@/components/FollowButton";
-import TitleCard, { dateText } from "@/components/TitleCard";
+import TitleCard from "@/components/TitleCard";
+import { dateText } from "@/lib/text";
 import { requireUser } from "@/lib/auth/auth";
 import { followedIds, getRelease } from "@/lib/catalogue";
 import { q } from "@/lib/db";

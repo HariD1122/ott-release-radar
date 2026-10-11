@@ -7,3 +7,12 @@ export function shortSynopsis(s: string | null | undefined, max = 220): string |
   if (out.length > max) out = out.slice(0, max).replace(/\s+\S*$/, "") + "…";
   return out;
 }
+
+/** Human-readable release date. Date-only sources are labelled so they are never mistaken for an exact time. */
+export function dateText(r: { release_date: string | null; release_precision: "date" | "datetime" }): string {
+  if (!r.release_date) return "Release date unavailable";
+  const d = new Intl.DateTimeFormat("en-IN", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(
+    new Date(r.release_date + "T00:00:00Z"),
+  );
+  return r.release_precision === "date" ? `${d} (date only)` : d;
+}

@@ -1,6 +1,6 @@
 {
-  "name": "app",
-  "version": "0.1.0",
+  "name": "ott-release-radar",
+  "version": "12.0.0",
   "private": true,
   "scripts": {
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.mts",

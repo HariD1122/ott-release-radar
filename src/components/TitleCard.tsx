@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ReleaseView } from "@/lib/catalogue";
 import { CONTENT_TYPE_LABEL } from "@/lib/taxonomy";
-import { shortSynopsis } from "@/lib/text";
+import { dateText, shortSynopsis } from "@/lib/text";
 
 export interface CardRec {
   decision: "WATCH" | "SKIP";
@@ -16,14 +16,6 @@ type Sync = { id: string; feedback?: "like" | "dislike" | null; inList?: boolean
 
 /** Same title shown twice on a page (e.g. both recommendation columns) stays in sync via a window event. */
 const EVENT = "ott:title-sync";
-
-export function dateText(r: Pick<ReleaseView, "release_date" | "release_precision" | "content_type">): string {
-  if (!r.release_date) return "Release date unavailable";
-  const d = new Intl.DateTimeFormat("en-IN", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(
-    new Date(r.release_date + "T00:00:00Z"),
-  );
-  return r.release_precision === "date" ? `${d} (date only)` : d;
-}
 
 export default function TitleCard({
   release: r,

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Preferences were renamed to Profile; keep old links working with a real server redirect.
+  async redirects() {
+    return [{ source: "/preferences", destination: "/profile", permanent: false }];
+  },
   turbopack: {
     rules: {
       "*.css": {

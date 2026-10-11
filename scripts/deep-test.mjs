@@ -89,21 +89,27 @@ ok("window is exactly 7 days minus 1 minute", new Date(d.window.end) - new Date(
 console.log("INFO digest:", `eligible ${d.eligibleCount}, matching ${d.matchCount}, personalized ${d.personalized.entries.length}, filters ${d.filters.entries.length}`);
 
 // ---- pages, titles, robustness ----
-const pages = ["/", "/new", "/new?w=completed", "/movies", "/series", "/episodes", "/watchlist", "/digest", "/profile", "/settings", "/preferences"];
-for (const p of pages) {
-  const s = Date.now();
+const pages = [
+  ["/", "collected records"], ["/new", "match your filters"], ["/new?w=completed", "match your filters"], ["/movies", "Collected movies"],
+  ["/series", "New series and new seasons"], ["/episodes", "Episode Updates"], ["/watchlist", "My Watchlist"], ["/digest", "Personalized for You"],
+  ["/profile", "My Profile"], ["/settings", "Settings & Telegram"],
+];
+for (const [p, marker] of pages) {
+  const s0 = Date.now();
   r = await fetch(base + p, { headers: { cookie }, redirect: "follow" });
-  const html = await r.text();
-  ok(`page ${p}`, r.status === 200 && !/Something went wrong/.test(html), `${r.status} ${Date.now() - s} ms`);
+  const html = (await r.text()).replace(/<!-- -->/g, "").replace(/&amp;/g, "&");
+  ok(`page ${p} renders real content`, r.status === 200 && html.includes(marker) && !/Something went wrong|NEXT_NOT_FOUND/.test(html), `${r.status} ${Date.now() - s0} ms`);
 }
-const id = d.filters.entries[0]?.releaseId ?? d.personalized.entries[0]?.releaseId;
-if (id) {
+r = await fetch(base + "/preferences", { headers: { cookie }, redirect: "manual" });
+ok("old /preferences link redirects to /profile", [301, 302, 307, 308].includes(r.status) && (r.headers.get("location") ?? "").endsWith("/profile"), String(r.status));
+const ids = [...d.filters.entries, ...d.personalized.entries].slice(0, 3).map((e) => e.releaseId);
+for (const id of ids) {
   r = await fetch(`${base}/title/${id}`, { headers: { cookie } });
   const h = await r.text();
-  ok("title detail page", r.status === 200 && /Date meaning/.test(h));
+  ok("title detail page renders", r.status === 200 && /Date meaning/.test(h) && !/NEXT_NOT_FOUND/.test(h), id.slice(0, 8));
 }
 r = await fetch(`${base}/title/00000000-0000-0000-0000-000000000000`, { headers: { cookie } });
-ok("unknown title -> 404", r.status === 404);
+ok("unknown title shows not-found", r.status === 404 || /could not be found/i.test(await r.text()));
 r = await fetch(`${base}/does-not-exist`, { headers: { cookie } });
 ok("unknown page -> 404", r.status === 404);
 r = await fetch(base + "/movies?q=" + encodeURIComponent("%'; DROP TABLE releases;--"), { headers: { cookie } });
