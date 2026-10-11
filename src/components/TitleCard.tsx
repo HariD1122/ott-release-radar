@@ -29,12 +29,16 @@ export default function TitleCard({
   detail,
   rec,
   reasons,
+  synopsis,
+  length,
   wide,
 }: {
   release: ReleaseView;
   detail?: string | null;
   rec?: CardRec | null;
   reasons?: string[];
+  synopsis?: string | null;
+  length?: string | null;
   wide?: boolean;
 }) {
   const [feedback, setFeedback] = useState(r.feedback);
@@ -117,6 +121,8 @@ export default function TitleCard({
           {r.languages.slice(0, 1).map((g) => <span key={g} className="chip">{g}</span>)}
           {r.runtime_minutes ? <span className="chip">{r.runtime_minutes} min</span> : null}
         </div>
+        {length && <p className="text-xs text-muted">{length}</p>}
+        {synopsis && <p className="line-clamp-2 text-xs italic text-muted">{synopsis}</p>}
         {rec && <p className="text-xs leading-snug text-ink/90">{rec.reason}</p>}
         {reasons && reasons.length > 0 && <p className="text-[11px] leading-snug text-muted">{reasons.join(" · ")}</p>}
         <div className="mt-auto flex items-center gap-1.5 pt-2">

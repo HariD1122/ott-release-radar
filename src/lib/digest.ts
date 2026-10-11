@@ -12,6 +12,9 @@ export interface DigestEntry {
   releaseIds: string[];
   title: string;
   typeLabel: string;
+  runtimeMinutes: number | null; // movie runtime, or per-episode runtime
+  episodeInfo: string | null; // e.g. "8 episodes" or "3 new episodes"
+  synopsis: string | null; // at most two short sentences
   detail: string | null; // e.g. "Season 2 - Episodes 5-7 (3 new)"
   dateLabel: string; // IST calendar date(s)
   datePrecision: "date" | "datetime";
@@ -36,6 +39,16 @@ export interface Digest {
   cards: Record<string, ReleaseView>;
 }
 
+/** At most two sentences, capped in length, so it fits on two lines. Never invents text: it only trims the source synopsis. */
+export function shortSynopsis(s: string | null | undefined, max = 220): string | null {
+  const t = (s ?? "").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  const sentences = t.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) ?? [t];
+  let out = sentences.slice(0, 2).join("").trim();
+  if (out.length > max) out = out.slice(0, max).replace(/\s+\S*$/, "") + "…";
+  return out;
+}
+
 const fmtDate = (d: string) =>
   new Intl.DateTimeFormat("en-IN", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(new Date(d + "T00:00:00Z"));
 
@@ -57,6 +70,9 @@ function toEntries<T extends ReleaseView>(ranked: { item: T; reasons: string[] }
       releaseIds: [r.id],
       title: r.title,
       typeLabel: CONTENT_TYPE_LABEL[r.content_type],
+      runtimeMinutes: r.runtime_minutes,
+      episodeInfo: r.episode_count ? `${r.episode_count} episodes` : null,
+      synopsis: shortSynopsis(r.synopsis),
       detail: null,
       dateLabel: r.release_date ? fmtDate(r.release_date) : "Date unavailable",
       datePrecision: r.release_precision,
@@ -78,6 +94,9 @@ function toEntries<T extends ReleaseView>(ranked: { item: T; reasons: string[] }
     const nums = items.map((i) => i.episode_number ?? 0).sort((a, b) => a - b);
     const dates = items.map((i) => i.release_date ?? "").filter(Boolean).sort();
     entry.releaseIds = items.map((i) => i.id);
+    entry.episodeInfo = `${items.length} new episode${items.length > 1 ? "s" : ""}`;
+    entry.runtimeMinutes = items.find((i) => i.runtime_minutes)?.runtime_minutes ?? null;
+    entry.synopsis = shortSynopsis(items.find((i) => i.synopsis)?.synopsis ?? null);
     entry.releaseId = [...items].sort((a, b) => (b.release_date ?? "").localeCompare(a.release_date ?? ""))[0].id;
     entry.detail =
       items.length === 1

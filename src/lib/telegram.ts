@@ -23,8 +23,11 @@ function entryBlock(i: number, e: DigestEntry, showFeedback: boolean): string {
       ? `📺 ${esc(e.platforms.join(", "))}${e.platformStatus === "confirmed_both" ? " (confirmed by 2 sources)" : ""}`
       : "📺 Platform: not confirmed",
   );
+  const length = [e.runtimeMinutes ? `${e.runtimeMinutes} min` : null, e.episodeInfo].filter(Boolean).join(" · ");
+  if (length) lines.push(`⏱ ${esc(length)}`);
   const meta = [e.genres.join(", "), e.languages.join(", ")].filter(Boolean).join(" · ");
   if (meta) lines.push(`🎭 ${esc(meta)}`);
+  lines.push(e.synopsis ? `📝 ${esc(e.synopsis)}` : "📝 Synopsis not available");
   if (e.rec) lines.push(`${e.rec.decision === "WATCH" ? "✅ WATCH" : "⏭ SKIP"} — ${esc(e.rec.reason)}`);
   if (showFeedback && e.reasons.length) lines.push(`ℹ️ ${esc(e.reasons.join("; "))}`);
   return lines.join("\n");

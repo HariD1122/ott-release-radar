@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { composeDigest } from "./digest";
+import { composeDigest, shortSynopsis } from "./digest";
 import { validateModelOutput } from "./gemini";
 import type { ReleaseView } from "./catalogue";
 import type { FeedbackItem, Prefs } from "./ranking";
@@ -93,6 +93,31 @@ describe("composeDigest + renderTelegram", () => {
 
   it("escape helper handles markup characters", () => {
     expect(esc("<b>&")).toBe("&lt;b&gt;&amp;");
+  });
+});
+
+describe("digest entry details (runtime, episodes, synopsis)", () => {
+  it("shows runtime and a trimmed two-sentence synopsis in Telegram", () => {
+    const long = "First sentence here. Second sentence follows. Third sentence must be dropped.";
+    const d = composeDigest([rel("m", { runtime_minutes: 142, synopsis: long })], prefs, [], w, now);
+    const text = renderTelegram(d).join(" ");
+    expect(text).toContain("142 min");
+    expect(text).toContain("First sentence here. Second sentence follows.");
+    expect(text).not.toContain("Third sentence");
+  });
+  it("shows episode counts for seasons and grouped episodes", () => {
+    const season = rel("s", { content_type: "season", season_number: 2, episode_count: 8, runtime_minutes: 45 });
+    const eps = [1, 2].map((n) => rel(`e${n}`, { content_type: "episode", series_tmdb_id: 7, season_number: 3, episode_number: n, runtime_minutes: 30 }));
+    const text = renderTelegram(composeDigest([season, ...eps], { ...prefs, contentTypes: [] }, [], w, now)).join(" ");
+    expect(text).toContain("8 episodes");
+    expect(text).toContain("2 new episodes");
+  });
+  it("says so when a synopsis is missing instead of inventing one", () => {
+    expect(renderTelegram(composeDigest([rel("n", { synopsis: null })], prefs, [], w, now)).join(" ")).toContain("Synopsis not available");
+  });
+  it("shortSynopsis caps long text and handles empty input", () => {
+    expect(shortSynopsis("")).toBeNull();
+    expect(shortSynopsis("x ".repeat(300))!.length).toBeLessThanOrEqual(222);
   });
 });
 

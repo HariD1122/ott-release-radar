@@ -19,6 +19,8 @@ function Entries({ entries, digest, empty, showReasons }: { entries: DigestEntry
               detail={e.detail}
               rec={e.rec ? { decision: e.rec.decision, reason: e.rec.reason } : null}
               reasons={showReasons ? e.reasons : undefined}
+              synopsis={e.synopsis}
+              length={[e.runtimeMinutes ? `${e.runtimeMinutes} min` : null, e.episodeInfo].filter(Boolean).join(" · ") || null}
             />
           </div>
         );
