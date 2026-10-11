@@ -13,6 +13,7 @@ import { toIstDate } from "./time/window";
 const TV_PROVIDER_IDS = "8|119|2336|232|237|350|561|532|309";
 const MAX_PAGES = 5;
 const MAX_SERIES = 60;
+const QUOTA_RESERVE = 5; // never spend the last RapidAPI calls automatically
 
 interface ReleaseRow {
   provider_key: string;
@@ -256,15 +257,22 @@ async function enrichAvailability(maxCalls: number, errors: string[]): Promise<n
     `SELECT imdb_id FROM releases
      WHERE imdb_id IS NOT NULL AND release_date >= (now() - interval '21 days')::date
        AND (availability_checked_at IS NULL OR availability_checked_at < now() - interval '7 days')
-     GROUP BY imdb_id ORDER BY max(release_date) DESC LIMIT $1`,
+     GROUP BY imdb_id
+     ORDER BY max((platform_status = 'unknown')::int) DESC, max(release_date) DESC LIMIT $1`,
     [maxCalls],
   );
   let calls = 0;
+  let lowQuota = false;
   for (const { imdb_id } of todo) {
+    if (lowQuota) {
+      errors.push(`rapidapi: stopped early to keep the last ${QUOTA_RESERVE} calls of quota in reserve`);
+      break;
+    }
     try {
       await new Promise((r) => setTimeout(r, 1200)); // plan limit is about 1 request/second
       const a = await indiaAvailability(imdb_id);
       calls++;
+      lowQuota = a.quotaRemaining !== null && a.quotaRemaining <= QUOTA_RESERVE;
       const rapid = rapidToDetails(a.platforms);
       const rows = await q<{ id: string; platform_details: PlatformDetail[] }>(
         "SELECT id, platform_details FROM releases WHERE imdb_id = $1",
@@ -288,7 +296,7 @@ async function enrichAvailability(maxCalls: number, errors: string[]): Promise<n
 }
 
 export async function runCollection(opts: { daysBack?: number; daysForward?: number; maxRapidCalls?: number } = {}): Promise<CollectionResult> {
-  const { daysBack = 16, daysForward = 7, maxRapidCalls = Number(process.env.RAPIDAPI_MAX_CALLS_PER_RUN ?? 12) } = opts;
+  const { daysBack = 16, daysForward = 7, maxRapidCalls = Number(process.env.RAPIDAPI_MAX_CALLS_PER_RUN ?? 5) } = opts;
   const day = 86_400_000;
   const from = toIstDate(new Date(Date.now() - daysBack * day));
   const to = toIstDate(new Date(Date.now() + daysForward * day));

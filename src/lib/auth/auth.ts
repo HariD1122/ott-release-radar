@@ -42,6 +42,9 @@ export type LoginResult =
 
 export async function login(rawLoginId: string, pin: string, ip: string | null): Promise<LoginResult> {
   const loginId = normalizeLoginId(rawLoginId);
+  // Housekeeping: drop expired sessions and old attempts so these tables never grow without bound.
+  await q("DELETE FROM sessions WHERE expires_at < now()");
+  await q("DELETE FROM login_attempts WHERE created_at < now() - interval '2 days'");
   const fails = await q<{ n: number }>(
     `SELECT count(*)::int AS n FROM login_attempts
      WHERE login_id = $1 AND succeeded = false AND created_at > now() - make_interval(mins => $2)`,
