@@ -66,9 +66,16 @@ export interface ReleaseFilters {
   offset?: number;
 }
 
+/**
+ * INDIA OTT RULE: a title is shown or recommended only if it is confirmed on at least one streaming platform in India
+ * (subscription or free-with-ads, from TMDB India providers and/or RapidAPI India availability). `platforms` holds exactly
+ * that list. Titles with no confirmed platform stay stored (they may be confirmed later) but are never shown.
+ */
+export const INDIA_OTT_SQL = "cardinality(r.platforms) > 0";
+
 export async function listReleases(userId: string, f: ReleaseFilters = {}): Promise<ReleaseView[]> {
   const params: unknown[] = [userId];
-  const where: string[] = [];
+  const where: string[] = [INDIA_OTT_SQL];
   const add = (sql: string, v: unknown) => {
     params.push(v);
     where.push(sql.replace("?", `$${params.length}`));
@@ -94,14 +101,14 @@ export async function listReleases(userId: string, f: ReleaseFilters = {}): Prom
 
 export async function getRelease(userId: string, id: string): Promise<ReleaseView | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
-  const rows = await q<ReleaseView>(`SELECT ${SELECT} WHERE r.id = $2`, [userId, id]);
+  const rows = await q<ReleaseView>(`SELECT ${SELECT} WHERE r.id = $2 AND ${INDIA_OTT_SQL}`, [userId, id]);
   return rows[0] ?? null;
 }
 
 /** All releases whose verified date falls inside the weekly window, via the shared eligibility function. */
 export async function eligibleReleases(userId: string, w: WeeklyWindow, asOf?: Date): Promise<ReleaseView[]> {
   const rows = await q<ReleaseView>(
-    `SELECT ${SELECT} WHERE r.release_date > $2::date - 1 AND r.release_date <= $3::date + 1
+    `SELECT ${SELECT} WHERE ${INDIA_OTT_SQL} AND r.release_date > $2::date - 1 AND r.release_date <= $3::date + 1
      ORDER BY r.release_date DESC, r.title, r.id`,
     [userId, w.startDate, w.endDate],
   );
@@ -117,7 +124,7 @@ export const FEATURED_MAX = 10;
  * if fewer than 5 qualify in the window, the window is dropped and the best-rated released titles fill the gap.
  */
 export async function featuredReleases(userId: string, today: string): Promise<ReleaseView[]> {
-  const base = `WHERE r.content_type IN ('movie','series','season') AND r.backdrop_url IS NOT NULL
+  const base = `WHERE ${INDIA_OTT_SQL} AND r.content_type IN ('movie','series','season') AND r.backdrop_url IS NOT NULL
      AND r.release_date <= $2::date`;
   // Vote-weighted rating (Bayesian average, prior 6.5 worth 10 votes) so a title with one 10/10 vote cannot top the list.
   const order = `ORDER BY (COALESCE(r.vote_count, 0) >= 3 AND r.vote_average > 0) DESC,
@@ -142,8 +149,8 @@ export async function featuredReleases(userId: string, today: string): Promise<R
 
 export async function distinctValues(): Promise<{ genres: string[]; languages: string[]; platforms: string[] }> {
   const [g, l, p] = await Promise.all([
-    q<{ v: string }>("SELECT DISTINCT unnest(genres) AS v FROM releases ORDER BY 1"),
-    q<{ v: string }>("SELECT DISTINCT unnest(languages) AS v FROM releases ORDER BY 1"),
+    q<{ v: string }>("SELECT DISTINCT unnest(genres) AS v FROM releases WHERE cardinality(platforms) > 0 ORDER BY 1"),
+    q<{ v: string }>("SELECT DISTINCT unnest(languages) AS v FROM releases WHERE cardinality(platforms) > 0 ORDER BY 1"),
     q<{ v: string }>("SELECT DISTINCT unnest(platforms) AS v FROM releases ORDER BY 1"),
   ]);
   return { genres: g.map((x) => x.v), languages: l.map((x) => x.v), platforms: p.map((x) => x.v) };
@@ -156,7 +163,7 @@ export async function counts() {
       count(*) FILTER (WHERE content_type='series')::int AS series,
       count(*) FILTER (WHERE content_type='season')::int AS seasons,
       count(*) FILTER (WHERE content_type='episode')::int AS episodes
-    FROM releases`);
+    FROM releases WHERE cardinality(platforms) > 0`);
   return r[0];
 }
 

@@ -54,6 +54,7 @@ export function weeklyWindow(now: Date, kind: WindowKind = "completed"): WeeklyW
 }
 
 export interface EligibilityInput {
+  platforms: string[]; // confirmed India streaming platforms; empty = not available in India
   release_date: string | null; // YYYY-MM-DD (IST calendar date)
   release_at: Date | string | null;
   release_precision: "date" | "datetime";
@@ -65,6 +66,7 @@ export interface EligibilityInput {
 export const OTT_DATE_TYPES = new Set(["ott_digital_in", "tv_season_air_date", "tv_episode_air_date"]);
 
 export function isEligible(r: EligibilityInput, w: WeeklyWindow, asOf?: Date): boolean {
+  if (r.platforms.length === 0) return false; // INDIA OTT RULE: not confirmed on an Indian streaming platform
   if (r.verification_status === "unverified") return false;
   if (!OTT_DATE_TYPES.has(r.release_date_type)) return false;
   if (r.release_precision === "datetime" && r.release_at) {

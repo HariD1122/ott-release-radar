@@ -123,7 +123,7 @@ describe.skipIf(!hasDb)("database integration", () => {
     const ins = (n: string, title: string, type: string, date: string, rating: number | null) =>
       q(
         `INSERT INTO releases (provider_key, tmdb_id, title, content_type, season_number, episode_number, backdrop_url, release_date,
-           release_date_type, verification_status, vote_average, vote_count) VALUES ($1, 9, $2, $3, $4, $5, 'https://x/y.jpg', $6, 'ott_digital_in', 'date_only', $7, 100)`,
+           release_date_type, verification_status, vote_average, vote_count, platforms) VALUES ($1, 9, $2, $3, $4, $5, 'https://x/y.jpg', $6, 'ott_digital_in', 'date_only', $7, 100, '{Netflix}')`,
         [key(n), title, type, type === "episode" ? 1 : null, type === "episode" ? 1 : null, date, rating],
       );
     // 12 recent movies rated 5.0 .. 9.5, a 9.9-rated episode (must be excluded), a duplicate title
@@ -148,6 +148,27 @@ describe.skipIf(!hasDb)("database integration", () => {
     const sparse = await cat.featuredReleases(userId, "2020-07-20");
     expect(sparse.length).toBeGreaterThanOrEqual(5);
     expect(sparse.length).toBeLessThanOrEqual(10);
+  });
+
+  it("INDIA OTT RULE: a title with no confirmed India streaming platform is never listed, opened, counted or featured", async () => {
+    const key = `itest-feat:${loginId}:noplat`;
+    await q(
+      `INSERT INTO releases (provider_key, tmdb_id, title, content_type, backdrop_url, release_date, release_date_type, verification_status,
+         vote_average, vote_count, platforms, genres, languages) VALUES ($1, 8, 'ITN Not In India', 'movie', 'https://x/y.jpg', '2020-03-10',
+         'ott_digital_in', 'date_only', 9.9, 500, '{}', '{Thriller}', '{Hindi}')`,
+      [key],
+    );
+    const [{ id }] = await q<{ id: string }>("SELECT id FROM releases WHERE provider_key = $1", [key]);
+    expect(await cat.listReleases(userId, { search: "ITN Not In India" })).toHaveLength(0);
+    expect(await cat.getRelease(userId, id)).toBeNull();
+    const win = (await import("./time/window")).windowEndingAt(new Date("2020-03-13T12:30:00Z"));
+    expect((await cat.eligibleReleases(userId, win)).map((r) => r.title)).not.toContain("ITN Not In India");
+    expect((await cat.featuredReleases(userId, "2020-03-31")).map((r) => r.title)).not.toContain("ITN Not In India");
+    // once a platform is confirmed (e.g. a later RapidAPI check), the same title appears everywhere
+    await q("UPDATE releases SET platforms = '{Netflix}' WHERE id = $1", [id]);
+    expect((await cat.listReleases(userId, { search: "ITN Not In India" })).length).toBe(1);
+    expect(await cat.getRelease(userId, id)).not.toBeNull();
+    expect((await cat.eligibleReleases(userId, win)).map((r) => r.title)).toContain("ITN Not In India");
   });
 
   it("automatic delivery is idempotent; manual is independent; failures are recorded; no collection runs", async () => {

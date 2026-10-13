@@ -40,7 +40,7 @@ export function renderTelegram(d: Digest): string[] {
     `Generated: ${esc(fmtIst(d.generatedAt))} IST`,
     `Confirmed releases in this window: <b>${d.eligibleCount}</b> · matching your saved filters: <b>${d.matchCount}</b>`,
     `🔎 Filters — ${esc(describeFilters(d.appliedFilters))}`,
-    "<i>Recommendations depend on available metadata; release dates are calendar dates from TMDB.</i>",
+    "<i>Only titles confirmed on a streaming platform in India are included. Release dates are calendar dates from TMDB.</i>",
   ].join("\n");
 
   const p = d.personalized;

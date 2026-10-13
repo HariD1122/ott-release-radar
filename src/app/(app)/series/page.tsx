@@ -14,7 +14,7 @@ export default async function Series({ searchParams }: { searchParams: Promise<S
   ]);
   return (
     <>
-      <PageTitle title="Series" sub="New series and new seasons" />
+      <PageTitle title="Series" sub="New series and seasons streaming in India" />
       <Filters action="/series" current={currentParams(sp)} options={options} saved={prefs} showDates />
       <Grid releases={items} empty="No collected series match your saved filters. Clear a filter above to see more." />
     </>

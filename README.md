@@ -1,4 +1,4 @@
-# OTT Release Radar — Version 12.1
+# OTT Release Radar — Version 12.2
 
 > **Database:** this project uses **Neon PostgreSQL** (not Supabase). Connection is the `DATABASE_URL` environment variable; tables are created by `npm run db:migrate`.
 
@@ -15,6 +15,10 @@ Stack: Next.js (App Router, TypeScript) · Tailwind · Neon PostgreSQL · TMDB +
 | **Gemini Flash** | Opinions only | WATCH/SKIP + short reason. Never a source of facts |
 
 Platform status per release: `confirmed_both` (TMDB and RapidAPI agree), `tmdb_only`, `rapidapi_only`, or `unknown` (shown as "Platform not confirmed").
+
+## India-only rule
+
+A movie or series is **shown or recommended only if it is confirmed on at least one streaming platform in India** (subscription or free-with-ads, from TMDB India providers and/or the RapidAPI India check). Titles with no confirmed Indian platform (for example rent/buy-only, or not available in India) stay stored but are hidden everywhere: lists, search, carousel, title pages, the weekly digest and Telegram. If a platform is confirmed later, the title appears automatically. The rule lives in one place per layer: `INDIA_OTT_SQL` (database queries), `isEligible()` (weekly eligibility), `matchFilters()` / `rankPersonalized()` (both recommendation lists).
 
 ## Weekly window and date rules
 
@@ -158,3 +162,7 @@ Secrets are server-side only; PINs are Argon2id-hashed; sessions are DB-backed (
 * Cards no longer show the synopsis (it is on the title page); the title page no longer overlaps the card with the details.
 * Telegram messages no longer include the WATCH/SKIP line; the website still shows AI opinions. Delivery history is no longer displayed on the website (still stored in `digest_history`).
 * `scripts/sync-check.mjs` compares GitHub, Vercel and Neon (code commit, migrations, environment variables).
+
+## Version 12.2 changelog
+
+* **India-only rule:** titles not confirmed on an Indian streaming platform are never shown or recommended (website, carousel, digest, Telegram). On the current data: 29 of 90 collected movies qualify; all collected series do.

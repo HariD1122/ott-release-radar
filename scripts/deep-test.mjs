@@ -88,10 +88,29 @@ ok("window boundaries are Friday 18:01 / 18:00 IST", /T12:30:00\.000Z$/.test(d.w
 ok("window is exactly 7 days minus 1 minute", new Date(d.window.end) - new Date(d.window.start) === 7 * 864e5 - 60e3);
 console.log("INFO digest:", `eligible ${d.eligibleCount}, matching ${d.matchCount}, personalized ${d.personalized.entries.length}, filters ${d.filters.entries.length}`);
 
+// ---- INDIA OTT RULE: nothing without a confirmed India streaming platform is shown or recommended ----
+{
+  const digestNow = (await (await fetch(base + "/api/digest", { headers: { cookie } })).json()).digest;
+  const entriesNow = [...digestNow.personalized.entries, ...digestNow.filters.entries];
+  ok("every digest entry has a confirmed India platform", entriesNow.every((e) => e.platforms.length > 0), `${entriesNow.length} entries`);
+  for (const p of ["/", "/new?w=completed", "/movies", "/series", "/episodes"]) {
+    const h = await (await fetch(base + p, { headers: { cookie } })).text();
+    ok(`${p} never shows "Platform not confirmed"`, !h.includes("Platform not confirmed"));
+  }
+  if (process.env.DATABASE_URL) {
+    const { neon } = await import("@neondatabase/serverless");
+    const hidden = await neon(process.env.DATABASE_URL).query("select id from releases where content_type = 'movie' and cardinality(platforms) = 0 limit 1");
+    if (hidden[0]) {
+      const page = await (await fetch(`${base}/title/${hidden[0].id}`, { headers: { cookie } })).text();
+      ok("a title not streaming in India cannot be opened", /could not be found/i.test(page) && !/Date meaning/.test(page));
+    }
+  }
+}
+
 // ---- pages, titles, robustness ----
 const pages = [
-  ["/", "titles collected"], ["/new", "match your filters"], ["/new?w=completed", "match your filters"], ["/movies", "Verified India digital releases"],
-  ["/series", "New series and new seasons"], ["/episodes", "Episode Updates"], ["/watchlist", "My Watchlist"], ["/digest", "Personalized for You"],
+  ["/", "titles collected"], ["/new", "match your filters"], ["/new?w=completed", "match your filters"], ["/movies", "Streaming now on Indian platforms"],
+  ["/series", "New series and seasons streaming in India"], ["/episodes", "Episode Updates"], ["/watchlist", "My Watchlist"], ["/digest", "Personalized for You"],
   ["/profile", "My Profile"], ["/settings", "Settings & Telegram"],
 ];
 for (const [p, marker] of pages) {

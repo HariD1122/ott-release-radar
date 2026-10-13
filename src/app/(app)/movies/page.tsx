@@ -14,7 +14,7 @@ export default async function Movies({ searchParams }: { searchParams: Promise<S
   ]);
   return (
     <>
-      <PageTitle title="Movies" sub="Verified India digital releases" />
+      <PageTitle title="Movies" sub="Streaming now on Indian platforms" />
       <Filters action="/movies" current={currentParams(sp)} options={options} saved={prefs} showDates />
       <Grid releases={items} empty="No collected movies match your saved filters. Clear a filter above to see more." />
     </>

@@ -113,12 +113,14 @@ export function summarizeFeedback(history: FeedbackItem[]): string {
 
 /** Pure part: eligible releases in, two independent categories out. No I/O, no AI. */
 export function composeDigest(
-  eligible: ReleaseView[],
+  allEligible: ReleaseView[],
   prefs: Prefs,
   history: FeedbackItem[],
   window: WeeklyWindow,
   now: Date,
 ): Digest {
+  // INDIA OTT RULE: only titles confirmed on an Indian streaming platform are ever counted or recommended.
+  const eligible = allEligible.filter((r) => r.platforms.length > 0);
   // The saved profile filters are permanent: nothing outside them is recommended or sent to Telegram.
   const matching = eligible.filter((r) => matchFilters(r, prefs) !== null);
   const p = rankPersonalized(matching, prefs, history, toIstDate(now));

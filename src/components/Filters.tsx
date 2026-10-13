@@ -166,7 +166,7 @@ export default function Filters({
         tabIndex={0}
         role="img"
         aria-label="About these filters"
-        title="These are your permanent profile filters. They stay saved until you change them and decide what is recommended on every page and in your Telegram digest. A platform filter only matches titles whose platform is confirmed."
+        title="These are your permanent profile filters. They stay saved until you change them and decide what is recommended on every page and in your Telegram digest. Only titles streaming on a confirmed platform in India are shown. A platform filter matches those platforms."
         className="flex h-8 w-8 cursor-help items-center justify-center rounded-full text-muted hover:bg-white hover:text-ink"
       >
         <Info size={16} aria-hidden />

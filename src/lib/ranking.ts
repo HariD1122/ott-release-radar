@@ -41,6 +41,7 @@ const intersect = (a: string[], b: string[]) => a.filter((x) => b.includes(x));
 
 /** Explicit filter match: every non-empty dimension must match (OR inside a dimension, AND across). */
 export function matchFilters(r: Rankable, p: Prefs): string[] | null {
+  if (r.platforms.length === 0) return null; // INDIA OTT RULE: never recommend a title that is not streaming in India
   const reasons: string[] = [];
   const dims: [string[], string[], string][] = [
     [p.genres, r.genres, "genre"],
@@ -115,6 +116,7 @@ export function rankPersonalized<T extends Rankable>(
   const ranked: PersonalizedResult<T>[] = [];
 
   for (const r of releases) {
+    if (r.platforms.length === 0) continue; // INDIA OTT RULE
     if (directlyDisliked.has(r.id)) continue; // personalised list respects explicit dislikes
     if (prefs.contentTypes.length && !prefs.contentTypes.includes(r.content_type)) continue;
     const reasons: string[] = [];

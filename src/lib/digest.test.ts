@@ -51,11 +51,24 @@ describe("composeDigest + renderTelegram", () => {
       rel("wrong-genre", { genres: ["Comedy"] }),
     ];
     const d = composeDigest(mixed, prefs, [], w, now);
-    expect(d.eligibleCount).toBe(5);
+    expect(d.eligibleCount).toBe(4); // the title with no India platform is not counted at all
     expect(d.matchCount).toBe(1);
     expect(d.personalized.entries.map((e) => e.releaseId)).toEqual(["ok"]);
     expect(d.filters.entries.map((e) => e.releaseId)).toEqual(["ok"]);
     expect(renderTelegram(d).join(" ")).not.toContain("wrong-lang");
+  });
+
+  it("INDIA OTT RULE: titles not streaming in India are not counted, listed or sent to Telegram", () => {
+    const mixed = [rel("ok"), rel("notindia", { platforms: [], platform_status: "unknown" }), rel("rentonly", { platforms: [] })];
+    const d = composeDigest(mixed, { ...prefs, genres: [], languages: [], platforms: [], contentTypes: [] }, [], w, now);
+    expect(d.eligibleCount).toBe(1);
+    expect(d.matchCount).toBe(1);
+    const ids = [...d.personalized.entries, ...d.filters.entries].map((e) => e.releaseId);
+    expect(ids).not.toContain("notindia");
+    expect(ids).not.toContain("rentonly");
+    const text = renderTelegram(d).join(" ");
+    expect(text).not.toContain("notindia");
+    expect(text).not.toContain("Platform: not confirmed");
   });
 
   it("collapses episodes of one season into one entry", () => {

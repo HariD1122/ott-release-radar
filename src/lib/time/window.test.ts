@@ -5,6 +5,7 @@ import { isEligible, weeklyWindow, windowEndingAt, type EligibilityInput } from 
 const FRI_CLOSE = new Date("2026-10-16T12:30:00Z");
 
 const base: EligibilityInput = {
+  platforms: ["Netflix"],
   release_date: null,
   release_at: null,
   release_precision: "date",
@@ -73,6 +74,10 @@ describe("isEligible - date only", () => {
     expect(isEligible({ ...base, release_date: null }, w)).toBe(false);
     expect(isEligible(d("2026-10-12", { verification_status: "unverified" }), w)).toBe(false);
     expect(isEligible(d("2026-10-12", { release_date_type: "theatrical" }), w)).toBe(false);
+  });
+  it("excludes titles that are not confirmed on any streaming platform in India", () => {
+    expect(isEligible(d("2026-10-12", { platforms: [] }), w)).toBe(false);
+    expect(isEligible(d("2026-10-12", { platforms: ["Zee5"] }), w)).toBe(true);
   });
   it("does not count releases after asOf as available", () => {
     expect(isEligible(d("2026-10-14"), w, new Date("2026-10-12T00:00:00Z"))).toBe(false);

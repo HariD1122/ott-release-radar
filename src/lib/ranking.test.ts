@@ -52,6 +52,19 @@ describe("rankPersonalized", () => {
   });
 });
 
+describe("India OTT rule", () => {
+  const unavailable = mk("na", ["Thriller"], "2026-10-15", { platforms: [] });
+  const open = { genres: [], languages: [], platforms: [], contentTypes: [] }; // no filters at all
+  it("neither list ever contains a title with no confirmed India platform", () => {
+    expect(rankForFilters([unavailable, ...releases], open).map((r) => r.id)).not.toContain("na");
+    expect(order(rankPersonalized([unavailable, ...releases], prefs, [], today).ranked)).not.toContain("na");
+  });
+  it("even strong Likes for its genre cannot bring it back", () => {
+    const likes = Array.from({ length: 6 }, (_, i) => fb(`l${i}`, "like", ["Thriller"]));
+    expect(order(rankPersonalized([unavailable, ...releases], prefs, likes, today).ranked)).not.toContain("na");
+  });
+});
+
 describe("rankForFilters", () => {
   it("is neutral: newest first and ignores feedback entirely", () => {
     const ids = rankForFilters(releases, prefs).map((r) => r.id);

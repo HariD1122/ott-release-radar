@@ -45,7 +45,7 @@ const BOXES = [
   { id: "a3", lane: "A", col: 3, step: 6, tag: "PROFILE PAGE", text: "Your choices are <b>saved in the memory</b> and stay until <b>you</b> change them. Every page follows them" },
   { id: "b3", lane: "B", col: 3, step: 7, tag: "THE APP", text: "<b>Weekly window:</b> last Friday 6:01&nbsp;PM to this Friday 6:00&nbsp;PM (India time). No real date = not counted" },
   { id: "f3", lane: "F", col: 3, step: 8, tag: "GOOGLE GEMINI", text: "<b>AI's instructions:</b> judge only from your taste and the title facts. Never invent dates, platforms or stories" },
-  { id: "b4", lane: "B", col: 4, step: 9, tag: "THE APP ON VERCEL", text: "Collects, <b>removes duplicates</b>, keeps only titles matching your filters, groups episodes, builds <b>two lists</b>" },
+  { id: "b4", lane: "B", col: 4, step: 9, tag: "THE APP ON VERCEL", text: "Collects, <b>removes duplicates</b>, keeps only titles <b>streaming in India</b> that match your filters, builds <b>two lists</b>" },
   { id: "c4", lane: "C", col: 4, step: 10, tag: "NEON DATABASE", text: "<b>Remembers</b> every release, your filters, Likes, watchlist and sent messages" },
   { id: "g4", lane: "G", col: 4, step: 11, tag: "TELEGRAM BOT", text: "The app hands the digest to the bot, which <b>delivers it</b> to your chat" },
   { id: "f5", lane: "F", col: 5, step: 12, tag: "GOOGLE GEMINI", text: "Writes a short <b>Watch / Skip</b> opinion for each title, based on your taste (shown on the website)" },
@@ -164,7 +164,7 @@ ${lanes}${seps}${head}${boxes}
 </div>
 <div class="legend">${legend}</div>
 <div class="panels"><div class="panel blue"><h3>Tools behind the app</h3>${apps}</div>${right}</div>
-<div class="note"><b>Friday time range:</b> each Friday digest covers releases from the <b>previous Friday 6:01 PM up to Friday 6:00 PM, India Standard Time (IST)</b>, both ends included. A platform name is shown only when it is confirmed. Good to know: Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title counts in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
+<div class="note"><b>Friday time range:</b> each Friday digest covers releases from the <b>previous Friday 6:01 PM up to Friday 6:00 PM, India Standard Time (IST)</b>, both ends included. <b>India-only rule:</b> a movie or series is shown or recommended only when it is confirmed on a streaming platform in India; anything else is hidden. Titles without a real release date are not counted. Good to know: Likes and Dislikes only change the <b>Personalized for You</b> list; the <b>Recommended for Your Filters</b> list never uses them. Release dates are calendar dates from TMDB (no exact time), so a title counts in the week its date falls in. The AI gives opinions only; every date, platform and runtime comes from TMDB and RapidAPI.</div>
 <script>
 const EDGES = ${JSON.stringify(EDGES)};
 const COLX = (c) => ${G.whoW} + (c - 1) * ${G.colW};
