@@ -39,7 +39,7 @@ export default async function Settings() {
       <section className="mb-8 rounded-xl border border-line bg-surface p-4">
         <h2 className="mb-3 text-lg font-bold">Integrations</h2>
         <ul className="space-y-1 text-sm">
-          {["TMDB_ACCESS_TOKEN", "RAPIDAPI_KEY", "GEMINI_API_KEY", "GEMINI_MODEL", "DATABASE_URL", "SESSION_SECRET"].map((k) => (
+          {["TMDB_ACCESS_TOKEN", "RAPIDAPI_KEY", "GEMINI_API_KEY", "GEMINI_MODEL", "DATABASE_URL"].map((k) => (
             <li key={k}>{k}: <b className={process.env[k] ? "text-good" : "text-bad"}>{configured(k)}</b></li>
           ))}
         </ul>
