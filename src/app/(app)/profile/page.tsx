@@ -25,7 +25,7 @@ export default async function Profile() {
       <section className="mb-6 rounded-xl border border-line bg-surface p-4 text-sm">
         <h2 className="mb-2 text-lg font-bold">Account</h2>
         <p className="text-xl font-extrabold">{user.displayName}</p>
-        <p className="text-muted">Created {when(acct[0]?.created_at)} · last sign-in {when(acct[0]?.last_login_at)}</p>
+        <p className="text-muted">Created {when(acct[0]?.created_at)}</p>
         <p className="mt-2 text-muted">
           Currently saved: {prefs.genres.length ? prefs.genres.join(", ") : "any genre"} · {prefs.platforms.length ? prefs.platforms.join(", ") : "any platform"} · {prefs.languages.length ? prefs.languages.join(", ") : "any language"}
         </p>
