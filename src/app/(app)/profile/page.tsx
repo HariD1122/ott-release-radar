@@ -1,5 +1,4 @@
 import NameForm from "@/components/NameForm";
-import PinForm from "@/components/PinForm";
 import PreferencesForm from "@/components/PreferencesForm";
 import { PageTitle } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
@@ -44,10 +43,6 @@ export default async function Profile() {
           languages={merge(LANGUAGE_OPTIONS, seen.languages, prefs.languages)}
           platforms={merge(PLATFORM_OPTIONS, seen.platforms.filter((p) => PLATFORM_OPTIONS.includes(p)), prefs.platforms)}
         />
-      </section>
-      <section className="rounded-xl border border-line bg-surface p-4">
-        <h2 className="mb-3 text-lg font-bold">Change PIN</h2>
-        <PinForm />
       </section>
     </>
   );
