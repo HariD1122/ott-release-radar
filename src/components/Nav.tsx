@@ -1,8 +1,8 @@
 "use client";
 
-import { Search, Bookmark, Clapperboard, Home, ListVideo, LogOut, Radar, Send, Settings, SlidersHorizontal, Tv } from "lucide-react";
+import { Search, Bookmark, Clapperboard, Home, ListVideo, Radar, Send, Settings, SlidersHorizontal, Tv } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "Home", icon: Home },
@@ -18,12 +18,6 @@ const LINKS = [
 
 export default function Nav({ name }: { name: string }) {
   const path = usePathname();
-  const router = useRouter();
-  async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
-  }
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
@@ -50,9 +44,6 @@ export default function Nav({ name }: { name: string }) {
           <input name="q" aria-label="Search catalogue" placeholder="Search titles" className="input !py-1.5 !pl-8 w-44" />
         </form>
         <span className="hidden text-xs text-muted xl:inline">{name}</span>
-        <button className="btn !px-2.5 !py-1.5" onClick={logout} aria-label="Log out">
-          <LogOut size={15} />
-        </button>
       </div>
     </header>
   );
