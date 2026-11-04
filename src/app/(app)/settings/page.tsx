@@ -1,5 +1,4 @@
 import ApiButton from "@/components/ApiButton";
-import PinForm from "@/components/PinForm";
 import { Notice, PageTitle } from "@/components/ui";
 import { requireUser } from "@/lib/auth/auth";
 import { q } from "@/lib/db";
@@ -56,11 +55,6 @@ export default async function Settings() {
             {jobs.map((j) => <li key={j.id}>{formatIst(new Date(j.started_at))} — <b>{j.status}</b>: {j.records_fetched} fetched, {j.records_inserted} new, {j.records_updated} updated, {j.rapidapi_calls} RapidAPI calls{j.error_details ? ` — ${j.error_details.split("\n")[0]}` : ""}</li>)}
           </ul>
         )}
-      </section>
-
-      <section className="rounded-xl border border-line bg-surface p-4">
-        <h2 className="mb-3 text-lg font-bold">Change PIN</h2>
-        <PinForm />
       </section>
     </>
   );
