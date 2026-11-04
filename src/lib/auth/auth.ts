@@ -3,7 +3,6 @@
 import argon2 from "argon2";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { q } from "../db";
 import { requireEnv } from "../env";
 
@@ -106,21 +105,21 @@ async function sessionIdFromCookie(): Promise<string | null> {
   }
 }
 
+/**
+ * Open access: the site no longer asks for a PIN. Every visitor acts as the owner account
+ * (the first active user, the same one the old PIN login signed in to).
+ */
 export async function getUser(): Promise<SessionUser | null> {
-  const sid = await sessionIdFromCookie();
-  if (!sid) return null;
   const rows = await q<{ id: string; login_id: string; display_name: string | null }>(
-    `SELECT u.id, u.login_id, u.display_name FROM sessions s JOIN users u ON u.id = s.user_id
-     WHERE s.id = $1 AND s.expires_at > now() AND u.status = 'active'`,
-    [sid],
+    "SELECT id, login_id, display_name FROM users WHERE status = 'active' ORDER BY created_at LIMIT 1",
   );
   return rows[0] ? { id: rows[0].id, loginId: rows[0].login_id, displayName: rows[0].display_name || rows[0].login_id } : null;
 }
 
-/** For pages and layouts: redirects to /login when not signed in. */
+/** For pages and layouts: returns the owner account. */
 export async function requireUser(): Promise<SessionUser> {
   const u = await getUser();
-  if (!u) redirect("/login");
+  if (!u) throw new Error("No account found. Run npm run db:seed once to create it.");
   return u;
 }
 
